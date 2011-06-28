@@ -1,0 +1,1300 @@
+<?php
+
+define('VOCABULARY_BREED', 1);
+
+function dtth_init() {
+  ctools_include('ajax');
+  ctools_include('modal');
+  ctools_include('form');
+  module_load_include('inc', 'dtth', 'dtth.signin');
+  ctools_modal_add_js();
+  drupal_set_html_head('<script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>');
+  
+  // Create our own javascript that will be used to theme a modal.
+  $sample_style = array(
+    'ctools-sample-style' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 640,
+        'height' => 500,
+        'addWidth' => 20,
+        'addHeight' => 15,
+      ),
+      'modalOptions' => array(
+        'opacity' => .5,
+        'background-color' => '#000',
+      ),
+      'animation' => 'fadeIn',
+      'modalTheme' => 'CToolsSampleModal',
+      'throbber' => theme('image', ctools_image_path('ajax-loader.gif', 'ctools_ajax_sample'), t('Loading...'), t('Loading')),
+    ),
+  );
+
+  drupal_add_js($sample_style, 'setting');
+  ctools_add_js('ctools-ajax-sample', 'dtth');
+  ctools_add_js('jquery.counter', 'dtth');  
+  ctools_add_css('ctools-ajax-sample', 'dtth');  
+  
+  $menu_item = menu_get_item();      
+  if ($menu_item['path'] == 'node/%' || $menu_item['path'] == 'node/%/caption/%') {    
+    $node = $menu_item['page_arguments'][0];            
+    if ($node->type == 'dog') {
+      $tid = $node->field_breed[0][value];
+      $term = taxonomy_get_term($tid);
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), '<front>');
+      $breadcrumb[] = l(t('By Breed'), 'browse/breed');
+      $breadcrumb[] = l($term->name, 'browse/breed/'. $tid);
+      $breadcrumb[] = l($node->title, 'node/'. $node->nid);  
+      drupal_set_breadcrumb($breadcrumb);
+    }
+    
+    if ($node->type == 'tilt') {
+      $tid = $node->field_breed[0][value];
+      $term = taxonomy_get_term($tid);
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), '<front>');
+      $breadcrumb[] = l(t('By Breed'), 'browse/breed');
+      $breadcrumb[] = l($term->name, 'browse/breed/'. $tid);  
+      $breadcrumb[] = l($node->dog->title, 'node/'. $node->dog->nid);
+      drupal_set_breadcrumb($breadcrumb);
+    }
+  }  
+  if (strpos($menu_item['path'],'browse') !== FALSE) {
+    $breadcrumb = array();       
+    drupal_set_breadcrumb($breadcrumb);    
+  }
+  
+  if ($menu_item['path'] == 'browse/breed/%') {
+    $tid = $menu_item['page_arguments'][0];
+    
+    $term = taxonomy_get_term($tid);
+    
+    $breadcrumb = array();
+    $breadcrumb[] = l(t('Home'), '<front>');
+    $breadcrumb[] = l(t('By Breed'), 'browse/breed');
+    $breadcrumb[] = l($term->name, 'browse/breed/'. $tid);  
+    drupal_set_breadcrumb($breadcrumb);
+  }
+  
+  if ($_POST['op'] == 'Login' && $_POST['js'] && $_POST['form_id'] == 'dtth_upload2_form') {
+    
+  }
+}
+
+function dtth_menu() {
+  $items = array();    
+  
+  $items['node/%node/caption'] = array(
+    'title' => 'Caption', 
+    'description' => 'Caption page', 
+    'page callback' => 'dtth_caption_list_page',
+    'page arguments' => array(1), 
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.caption.inc',
+    'weight' => 0,
+  );
+  
+  $items['node/%node/caption/%'] = array(
+    'title' => 'Caption', 
+    'description' => 'Caption page', 
+    'page callback' => 'dtth_caption_detail_page',
+    'page arguments' => array(1,3), 
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.caption.inc',
+    'weight' => 0,
+  );
+  
+  $items['node/%node/caption/submit'] = array(
+    'title' => 'Caption', 
+    'description' => 'Caption page', 
+    'page callback' => 'dtth_caption_submit',
+    'page arguments' => array(1), 
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.caption.inc',
+    'weight' => 0,
+  );
+  
+  $items['upload'] = array(
+    'title' => 'Upload', 
+    'description' => 'Upload Photos', 
+    'page callback' => 'dtth_upload2_page', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.upload.inc',
+    'weight' => 0,
+  );
+  
+  /*$items['upload'] = array(
+    'title' => 'Upload', 
+    'description' => 'Upload Photos', 
+    'page callback' => 'dtth_upload_page', 
+    'access arguments' => array('create dog content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 0,
+  );*/
+  
+  $items['upload/tilt'] = array(
+    'title' => 'Upload', 
+    'description' => 'Upload Photos', 
+    'page callback' => 'dtth_upload_tilt_page', 
+    'access arguments' => array('create dog content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 0,
+  );
+  
+  $items['upload/breed/js'] = array(
+    'title' => 'Upload', 
+    'description' => 'Upload Photos', 
+    'page callback' => 'dtth_upload_breed_js', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.upload.inc',
+    'weight' => 0,
+  );
+  
+  $items['upload/tilt/js'] = array(
+    'title' => 'Upload', 
+    'description' => 'Upload Photos', 
+    'page callback' => 'dtth_upload_tilt_js', 
+    'access arguments' => array('create dog content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 0,
+  );
+  
+  $items['upload/new/%node'] = array(
+    'title' => 'Upload', 
+    'description' => 'Upload Photos', 
+    'page callback' => 'dtth_upload_new',
+    'page arguments' => array(2), 
+    'access arguments' => array('create dog content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 0,
+  );
+  
+  $items['browse'] = array(
+    'title' => 'Browse', 
+    'description' => 'Listing of blogs.', 
+    'page callback' => 'dtth_browse_recent', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 0,
+  );
+
+  $items['browse/recent'] = array(
+    'title' => 'Recent', 
+    'description' => 'Listing of blogs.', 
+    'page callback' => 'dtth_browse_recent', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 0,
+  );
+  
+  $items['browse/breed'] = array(
+    'title' => 'By Breed', 
+    'description' => 'Listing of Breeds.', 
+    'page callback' => 'dtth_browse_breed', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 1,
+  );
+  
+  $items['browse/favorite'] = array(
+    'title' => 'Favorite Tilts', 
+    'description' => 'Listing of Breeds.', 
+    'page callback' => 'dtth_browse_favorite', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 2,
+  );
+  
+  $items['browse/frequent'] = array(
+    'title' => 'Most Frequent Tilters', 
+    'description' => 'Listing of Breeds.', 
+    'page callback' => 'dtth_browse_frequent', 
+    'access arguments' => array('access content'), 
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'dtth.pages.inc',
+    'weight' => 3,
+  );  
+  
+  $items['browse/breed/%'] = array(
+    'title' => 'Breed', 
+    'description' => 'Listing of Breeds.', 
+    'page callback' => 'dtth_browse_breed_detail', 
+    'page arguments' => array(2),
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.pages.inc'
+  );
+  
+  $items['signin'] = array(
+    'title' => 'Breed', 
+    'description' => 'Listing of Breeds.',
+    'page callback' => 'dtth_signin_page',              
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.signin.inc'
+  );
+  
+  $items['signin/%'] = array(
+    'title' => 'Breed', 
+    'description' => 'Listing of Breeds.', 
+    'page callback' => 'dtth_signin',
+    'page arguments' => array(1),     
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.signin.inc'
+  );
+  
+  $items['signin/%/callback'] = array(
+    'title' => 'Breed', 
+    'description' => 'Listing of Breeds.', 
+    'page callback' => 'dtth_signin_callback',
+    'page arguments' => array(1),     
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'dtth.signin.inc'
+  );
+  
+  return $items;  
+}
+
+function dtth_theme() {
+  return array(
+    'dtth_upload_form' => array(
+      'arguments' => array('form' => NULL),       
+    ),
+    'dtth_upload2_form' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'dtth.upload.inc',       
+    ),
+    'dtth_signin_form' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'dtth.signin.inc',       
+    ),
+  );
+}
+
+function dtth_form_alter(&$form, &$form_state, $form_id) {
+  global $user;             
+      
+  if ($form_id == 'user_login') {
+    $form['fbconnect_button']['#access'] = 0;
+    $form['twitter_signin']['#access'] = 0;
+  }
+  
+  if ($form_id == 'twitter_oauth_callback' && $_SESSION['twitter_oauth']['signin']) {    
+    $form['#submit'] = array_merge(array('dtth_signin_callback_twitter_submit'), $form['#submit']);
+    foreach ($form['#submit'] as $key => $value) {
+      if ($value == 'twitter_signin_oauth_callback_submit') {
+        unset($form['#submit'][$key]);
+      }
+    }    
+  }
+
+/*  
+  // replace comment to caption
+  if ($form_id == 'comment_form') {
+    $form['#post'] = array();
+    
+    if ($_POST['op'] == t('Save')) {
+      $form_build_id = $_POST['form_build_id'];    
+      if ($cached = cache_get('storage_' . $form_build_id, 'cache_form')) {      
+        $form_state['storage'] = $cached->data;
+      } 
+    } 
+    
+    $nid = $form['nid']['#value'];
+    drupal_add_js('misc/jquery.form.js');
+    $form['#prefix'] = '<div class="caption_message"></div><div class="caption_add">';
+    $form['#suffix'] = '</div>';        
+    $form['comment_filter']['comment']['#resizable'] = FALSE;
+    $form['comment_filter']['comment']['#rows'] = 3;
+    $form['comment_filter']['comment']['#attributes']['class'] = 'caption_text';
+    $form['comment_filter']['comment']['#title'] = '';
+    $form['comment_filter']['format']['#access'] = FALSE;
+    $form['comment_filter']['comment']['#attributes']['placeholder'] = t('What\'s going through this dog\'s mind? Tell us! PS, it\'ll probably make for a great tweet!');
+    $form['subject']['#access'] = FALSE;
+    $form['_author']['#access'] = FALSE;
+    $form['preview']['#access'] = FALSE;
+    if ((bool) $user->uid) {
+      $form['submit']['#attributes']['class'] = 'post_btn ctools-use-ajax';
+    } else {
+      $form['submit2'] = array(
+        '#type' => 'markup',
+        '#value' => ctools_modal_text_button(t('Signin'), 'signin', t('Signin'), 'post_btn ctools-modal-ctools-sample-style'),
+      );
+      $form['submit']['#attributes']['class'] = 'post_btn ctools-use-ajax';
+      $form['submit']['#attributes']['style'] = 'display: none;';
+    }        
+    //$form['#action'] = url('node/' . $nid .'/caption/submit');
+    $form['#validate'] = array_merge(array('dtth_form_comment_validate'), $form['#validate']);
+    $form['#submit'] = array('dtth_comment_form_submit');                                    
+  }
+*/  
+    
+  // Look for a node edit form.
+  if (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] .'_node_form' == $form_id) {
+    $node = &$form['#node'];        
+
+    // Is this node the one we are testing?
+    if ($node->type == 'dog' || $node->type == 'tilt') {
+      $form['revision_information']['#access'] = 0;
+      //$form['author']['#access'] = 0;
+      $form['options']['#access'] = 0;
+      $form['path']['#access'] = 0;
+      //$form['comment_settings']['#access'] = 0;
+      $form['menu']['#access'] = 0;
+      $form['buttons']['preview']['#access'] = 0;      
+    }
+    
+    if ($node->type == 'tilt' && !empty($GLOBALS['dtth_upload_page'])) {      
+      $form['title']['#access'] = 0;      
+      //$form['buttons']['#access'] = 0;
+      $form['field_breed']['#access'] = 0;
+      $form['field_dog']['#access'] = 0;
+      $form_build_id = $form['form_build_id']['#value'];
+      $form_token = $form['form_token']['#default_value'];
+      drupal_add_js("$(document).ready(function() {
+        $(document).bind('popups_close', function(obj, popup) {
+          //alert('ok');
+          $('#node-form input').each(function() {
+            //console.log($(this));
+          });
+          var fid = $('#edit-field-image-0-ahah-wrapper #edit-field-image-0-fid').attr('value');
+          //console.log($('#edit-field-image-0-ahah-wrapper #edit-field-image-0-fid'));
+          //alert(fid);
+          $('#edit-tilt-fid').val(fid);
+        });              
+        $('#edit-field-image-0-upload').change(function() {                                                  
+          $(this).next().mousedown();          
+        });        
+        $('#edit-tilt-form-id').val('".$form_build_id."');
+        $('#edit-tilt-form-token').val('".$form_token."');
+      });",'inline');            
+    }
+    
+    if ($node->type == 'dog' && !empty($GLOBALS['dtth_upload_page'])) {      
+      /*$node = new stdClass();
+      $node->type = 'tilt';  
+      $node->uid = $user->uid;
+      $node->name = $user->name;
+      $form['#prefix'] = drupal_get_form($node->type . '_node_form', $node);*/
+      /*$form['image'] = array(
+        '#type' => 'file',        
+        '#size' => 40,
+        '#weight' => -1,
+      );
+      drupal_add_js("$(document).ready(function() {              
+        $('#edit-image').change(function() {                                                  
+          //$(this).next().mousedown();          
+        });
+      });",'inline');*/
+      // Keep this example as simple as possible by hidding a few buttons.
+      // If we wanted to show all buttons, then we probably need to take
+      // additional actions, for example to alter the delete confirmation
+      // page so that we also send the modal frame javascript to that page,
+      // and we also alter that particular form to append out submit handler
+      // where we may wish to close the modal frame dialog.
+      // So let's keep this as simple as possible. We are now hidding all
+      // buttons, except "Save" and "Preview".
+      foreach (element_children($form['buttons']) as $key) {
+        if (!in_array($key, array('submit', 'preview')) && isset($form['buttons'][$key]) && $form['buttons'][$key]) {
+          unset($form['buttons'][$key]);
+        }
+      }
+      
+      /*$form['image'] = array(
+        '#type' => 'file',            
+      );
+      $form['upload'] = array(
+        '#type' => 'submit',
+        '#value' => t('Upload'),
+        '#ahah' => array(
+          'path' => 'upload/tilt/js',
+          'wrapper' => 'tilt_wrapper',
+          'method' => 'replace',
+          'effect' => 'fade',
+        ),    
+      );*/
+      
+      $form['caption'] = array(
+        '#title' => t('Caption'),
+        //'#description' => t('What\'s Going Through Your Dog\'s Head?'),
+        '#type' => 'textarea',
+        '#weight' => 3,
+        '#resizable' => FALSE, 
+        '#attributes' => array(
+          'placeholder' => t('What\'s Going Through Your Dog\'s Head?')
+        ),       
+      );
+      
+      $form['tilt_form_id'] = array(
+        '#type' => 'hidden',        
+      );            
+      $form['tilt_form_token'] = array(
+        '#type' => 'hidden',        
+      );
+      
+      $form['tilt_fid'] = array(
+        '#type' => 'hidden',        
+      );
+                                                            
+      $form['field_breed']['#attributes']['placeholder'] = t('Breed Type');                        
+      $form['title']['#attributes']['placeholder'] = t('Name');
+      
+      $form['field_tilt']['#access'] = 0;
+
+      // Append our submit handler. This is required if we want a chance to
+      // close the modal frame dialog.
+      $form['#theme'] = 'dtth_upload_form';
+      //$form['#submit'][] = 'dtth_upload_form_submit';                                    
+      //drupal_add_js(drupal_get_path('module','dtth') . '/js/upload.js');
+    }
+  }
+}
+
+function theme_dtth_upload_form($form) {  
+  
+  $output = '';  
+    
+  foreach (element_children($form['field_image']) as $key) {
+    /*$upload = drupal_render($form['field_image'][$key]['filefield_upload']);
+    $rows[] = array(
+      drupal_render($form['field_image'][$key]),
+      $upload,      
+    );*/    
+    $form['field_image'][$key]['upload']['#description'] = t('Upload Your Pup Tilting');
+  }  
+  
+  
+  $form['field_image']['#title'] = '';
+  $rows[] = array(
+    array('colspan' => 2, 'data' => drupal_render($form['field_image'])),        
+  );
+  
+  /*$form['image'][0]['#title'] = '';     
+  $rows[] = array(
+    drupal_render($form['image']),
+    drupal_render($form['upload'])        
+  );*/    
+      
+  /*$form['field_tilt'][0]['#title'] = '';
+  $form['field_tilt']['#title'] = '';  
+  $form['field_tilt']['#prefix'] = '<div style="display: none;">';
+  $form['field_tilt']['#suffix'] = '</div>' . l(t('Add Image'), 'upload/tilt', array('attributes' => array('class' => 'upload_tilt')));
+  popups_add_popups(array('a.upload_tilt' => array('noUpdate' => TRUE)));   
+  $rows[] = array(
+    array('colspan' => 2, 'data' => drupal_render($form['field_tilt'])),        
+  );*/  
+  
+  $form['field_breed']['#title'] = '';
+  $form['field_breed']['value']['#title'] = '';    
+  $rows[] = array(
+    drupal_render($form['field_breed']),
+    '',    
+  );
+    
+  $form['title']['#title'] = '';            
+  $rows[] = array(
+    drupal_render($form['title']),
+    '',    
+  );
+  
+  $form['caption']['#title'] = '';  
+  $rows[] = array(
+    array('colspan' => 2, 'data' => drupal_render($form['caption'])),    
+  );      
+  
+  $rows[] = array(  
+    array('colspan' => 2, 'data' => drupal_render($form['buttons']['submit'])),    
+  );
+  
+  $output .= theme('table', NULL, $rows);
+  $output .= drupal_render($form);
+  return $output;
+}
+
+function dtth_upload_form_alter_submit($form, &$form_state) {
+  global $user;
+  
+
+  
+  
+  // Ignore preview requests. Close dialog only when user clicks "Save" button.
+  /*if ($form_state['values']['op'] == t('Save')) {
+    // Tell the parent window to close the modal frame dialog.
+    modalframe_close_dialog(array(
+      'message' => t('Dog uploaded successfully'),
+    ));
+  }*/
+}
+
+/*
+// validate caption value
+function dtth_form_comment_validate($form, &$form_state) {
+  global $user;
+  
+  $values = $form_state['values'];  
+  $node = node_load($form_state['values']['nid']);
+  
+  if (strlen($values['comment']) > 140) {
+    $output = t('Maximum caption should be lower than 140 characters');
+    $commands = array();
+    $commands[] = ctools_ajax_command_html('.node_'.$node->nid.' .view_caption_ajax .caption_message', $output);    
+    $commands[] = ctools_ajax_command_eval('$(".node_'.$node->nid.' .view_caption_ajax .caption_message").attr("class","caption_message")');    
+    $commands[] = ctools_ajax_command_eval('$(".node_'.$node->nid.' .view_caption_ajax .caption_message").addClass("error")');
+    ctools_ajax_render($commands);
+    form_set_error('comment', $output);
+  }  
+}
+
+function dtth_comment_form_submit($form, &$form_state) {    
+  _comment_form_submit($form_state['values']);
+  if ($cid = comment_save($form_state['values'])) {    
+    $node = node_load($form_state['values']['nid']);
+    // Add 1 to existing $node->comment count to include new comment being added.
+    $comment_count = $node->comment_count + 1;
+    $page = comment_new_page_count($comment_count, 1, $node);
+    $output = dtth_comment_render($node, $cid);          
+    $commands[] = ctools_ajax_command_append('.node_'.$node->nid.'  .view_caption_ajax .captions', $output);
+    //$commands[] = ctools_ajax_command_eval('$.scrollTo(\'.node_'.$node->nid.'  .view_caption_ajax .captions .caption_'.$cid.'\', 1000, { easing:\'linear\' });');
+    $commands[] = ctools_ajax_command_html('.node_'.$node->nid.' .view_caption_ajax .caption_message', '');
+    $commands[] = ctools_ajax_command_eval('$(".node_'.$node->nid.' .view_caption_ajax .caption_message").attr("class","caption_message")');        
+    ctools_ajax_render($commands);
+  }  
+}*/
+
+function dtth_link_alter(&$links, $node, $comment = NULL) {    
+  if ($comment) {
+    //print_r($links);
+  }  
+}
+
+
+
+function dtth_block($op = 'list', $delta = 0, $edit = array()) {
+  global $user;
+  if ($op == 'list') {
+    $blocks[0]['info'] = t('DTTH : Upload Photo');    
+    $blocks[1]['info'] = t('DTTH : Top Voted Captions - This Week');
+    $blocks[2]['info'] = t('DTTH : Top Voted Captions - All Time');
+    $blocks[3]['info'] = t('DTTH : User Info');
+    return $blocks;
+  }
+  
+  if ($op == 'view') {
+    switch ($delta) {
+      case 3:                                                              
+        if (!(bool) $user->uid) {    
+          $attr = array();
+          if (variable_get('fbconnect_fast_reg', 0) && variable_get('fbconnect_reg_options', 0)) {
+            $attr = array('perms' => 'email');
+          }  
+          //$facebook_link = fbconnect_render_button($attr);
+          $facebook_link = dtth_signin_button('facebook');
+          
+          $twitter_link = dtth_signin_button('twitter');                  
+           
+          $output = '<div id="user_login" class="png_bg">		     		    
+              '.$facebook_link.'		    
+              '.$twitter_link.'		     		
+            </div>';
+        } else {        
+          $output = '<div id="user_status">
+            <div class="user_status_inner">
+            <div class="userpicture">'.theme('user_picture', $user).'</div>
+            <div class="username">'.t('Welcome !username (!logout)', array('!username' => theme('username', $user), '!logout' => l(t('logout'), 'logout'))).'</div>          
+            </div>          
+            </div>';
+        }                
+                          
+        $block = array(
+          'content' => $output,
+        );
+        return $block;
+      break;
+      case 0:
+        //modalframe_parent_js();
+        //drupal_add_js(drupal_get_path('module', 'dtth') .'/js/upload.js');                
+                
+        $block['subject'] = '';
+        //$upload_link = l(t('Upload'), 'upload', array('attributes' => array('class' => 'upload_btm modalframe-example-child')));
+        $upload_link = ctools_modal_text_button(t('Wizard (default modal)'), 'upload', t('Pick an animal'), 'upload_btm ctools-modal-ctools-sample-style');
+        //$upload_link = l(t('Upload'), 'upload', array('attributes' => array('class' => 'upload_btm')));
+        //popups_add_popups(array('a.upload_btm' => array('noUpdate' => TRUE)));                
+        
+        $output = '<div id="user_upload" class="png_bg">'.$upload_link.'</div>';        
+        
+        $block['content'] = $output;                        
+      break;
+      case 1:
+        $criteria['content_type'] = 'comment';
+        $criteria['value_type'] = 'points';
+        $criteria['tag'] = 'vote';
+        //$criteria['function'] = 'count';
+        $criteria['timestamp'] = (time() - (7*24*60*60));
+        $table = 'vote';
+        $query = "SELECT v.content_id, v.timestamp, COUNT(v.value) AS value, MAX(v.timestamp) AS timestamp FROM {votingapi_" . $table . "} v 
+        INNER JOIN {comments} AS c ON c.cid = v.content_id AND v.content_type = 'comment'
+        INNER JOIN {node} AS n ON c.nid = n.nid AND n.type = 'tilt' 
+        WHERE 1 = 1";
+        $details = _votingapi_query('vote', $criteria);                        
+        $query .= $details['query'];                
+        $query .= " GROUP BY v.content_id ORDER BY value DESC, timestamp DESC";        
+        $limit = 10;                
+        $votes = db_query_range($query, $details['args'], 0, $limit); 
+        $items = array(); 
+        $i = 0;        
+        while ($vote = db_fetch_object($votes)) {                              
+          if ($i % 2 == 0) {
+            $output2 = '<li class="odd">';
+          } else {
+            $output2 = '<li class="even">';
+          }                    
+          $comment = _comment_load($vote->content_id);
+          $comment->timestamp = $vote->timestamp;
+          $node = node_load($comment->nid);
+                    
+          $output2 .= l(theme('imagecache', 'sidebar_image',$node->field_image[0]['filepath']), 'node/'. $node->nid, array('html' => TRUE));
+          $output2 .= '<h4 class="caption png_bg">'.$comment->comment.'</h4>';
+          $output2 .= '<span class="meta">'.l($node->title, 'node/'.$node->nid) .' ~ '.format_interval(time() - $comment->timestamp).' ago</span>';
+          $output2 .= '</li>';     
+          $output .= $output2;     
+          $i++;           
+        }               
+        $block['content'] = '<ul class="caption_lists">' . $output. '</ul>';
+      break;
+      case 2:
+        $criteria['content_type'] = 'comment';
+        $criteria['value_type'] = 'points';
+        $criteria['tag'] = 'vote';
+        $criteria['function'] = 'count';
+        //$criteria['timestamp'] = (time() - (7*24*60*60));
+        $table = 'cache';
+        $query = "SELECT v.content_id, v.timestamp FROM {votingapi_" . $table . "} v 
+        INNER JOIN {comments} AS c ON c.cid = v.content_id AND v.content_type = 'comment'
+        INNER JOIN {node} AS n ON c.nid = n.nid AND n.type = 'tilt' 
+        WHERE 1 = 1";
+        $details = _votingapi_query('vote', $criteria);
+        $query .= $details['query'];        
+        $query .= " ORDER BY v.value DESC, v.timestamp DESC";        
+        $limit = 10;               
+        $votes = db_query_range($query, $details['args'], 0, $limit);        
+        $items = array(); 
+        $i = 0;
+        while ($vote = db_fetch_object($votes)) {          
+          if ($i % 2 == 0) {
+            $output2 = '<li class="odd">';
+          } else {
+            $output2 = '<li class="even">';
+          }          
+          $comment = _comment_load($vote->content_id);          
+          $comment->timestamp = $vote->timestamp;
+          $node = node_load($comment->nid);
+                    
+          $output2 .= l(theme('imagecache', 'sidebar_image',$node->field_image[0]['filepath']), 'node/'. $node->nid, array('html' => TRUE));
+          $output2 .= '<h4 class="caption png_bg">'.$comment->comment.'</h4>';
+          $output2 .= '<span class="meta">'.l($node->title, 'node/'.$node->nid) .' ~ '.format_interval(time() - $comment->timestamp).' ago</span>';
+          $output2 .= '</li>';     
+          $output .= $output2;     
+          $i++;           
+        }               
+        $block['content'] = '<ul class="caption_lists">' . $output. '</ul>';
+      break;      
+    }
+    return $block;
+  }      
+}
+
+function dtth_taxonomy_dog_count($node) {  
+  $tid = $node->field_breed[0]['value'];
+  if ($tid) {  
+    $count = db_result(db_query("SELECT COUNT(*) FROM {node} AS n INNER JOIN {term_node} AS tn ON n.nid = tn.nid AND n.vid = tn.vid WHERE n.type='dog' AND n.status=1 AND tn.tid=%d", $tid));
+    db_query("UPDATE {term_data} SET dog_total=%d WHERE tid=%d", $count, $tid);
+  }      
+}
+
+function dtth_taxonomy_tilt_count($node) {  
+  $tid = $node->field_breed[0]['value'];
+  if ($tid) {  
+    $count = db_result(db_query("SELECT COUNT(*) FROM {node} AS n INNER JOIN {term_node} AS tn ON n.nid = tn.nid AND n.vid = tn.vid INNER JOIN {content_field_image} AS fi ON fi.vid=n.vid WHERE n.type='tilt' AND n.status=1 AND tn.tid=%d", $tid));
+    db_query("UPDATE {term_data} SET tilt_total=%d WHERE tid=%d", $count, $tid);      
+  }
+}
+
+
+function dtth_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  global $user;
+  
+  if ($node->type == 'tilt') {
+    switch ($op) {
+      case 'presave':
+        $node->comment = 2;
+      break;
+      case 'insert':
+        if ($node->field_breed[0]['value']) {
+          dtth_taxonomy_tilt_count($node);
+        }
+        
+        // create default caption for the first time              
+        if (!empty($node->caption)) {    
+          $edit['comment'] = $node->caption;
+          $edit['subject'] = $node->caption;
+          $edit['uid'] = $user->uid;
+          $edit['nid'] = $node->nid;    
+          comment_save($edit);
+        }
+      break;
+      case 'update':
+        if ($node->field_breed[0]['value']) {                  
+          dtth_taxonomy_tilt_count($node);
+        }
+      break;
+      case 'view':                                       
+        $term = taxonomy_get_term($node->field_breed[0]['value']);      
+        $node->content['breed']['#value'] = l($term->name, 'browse/breed/'.$term->tid);;                    
+        $total_comment = db_result(db_query("SELECT comment_count FROM {node_comment_statistics} WHERE nid=%d", $node->nid));
+        $node->content['comment_total']['#value'] = $total_comment;      
+        $comment_last = db_result(db_query("SELECT last_comment_cid FROM {node_comment_statistics} WHERE nid=%d", $node->nid));
+        if ($comment_last) {
+          $comment_last = _comment_load($comment_last);
+          $node->content['comment_last']['#value'] = $comment_last->comment;        
+        }
+        $comment_topvote = db_result(db_query("SELECT topvote_comment_cid FROM {node_comment_statistics} WHERE nid=%d", $node->nid));
+        if ($comment_topvote) {
+          $comment_topvote = _comment_load($comment_topvote);
+          $node->content['comment_topvote']['#value'] = $comment_topvote->comment;        
+        } else {
+          if ($comment_last) {
+            $node->content['comment_topvote']['#value'] = $comment_last->comment;
+          } else {
+            $node->content['comment_topvote']['#value'] = t('Be the first to add a caption to this tilt!');
+          }
+        } 
+        
+        if ($total_comment > 0) {
+          $viewcaption = t('View All !total Captions', array('!total' => $total_comment));
+        } else {
+          $viewcaption = t('View All Captions', array('!total' => $total_comment));
+        }
+        
+        $node->content['comment_links']['#value'] = l($viewcaption.'<span>&nbsp;</span>', 'node/'.$node->nid.'/caption', array('html' => TRUE, 'title' => t('Display caption'), 'attributes' => array('class' => 'add_caption ctools-use-ajax')));
+                    
+        //$node->content['comment_total']['#value'] = db_result(db_query("SELECT COUNT(*) FROM {comments} WHERE nid=%d AND status=0", $node->nid));            
+        $node->content['comment_form']['#value'] = comment_form_box(array('nid' => $node->nid));
+        $tid = $tid = $node->field_breed[0]['value'];
+        $node->content['breed_count']['#value'] = db_result(db_query("SELECT dog_total FROM {term_data} WHERE tid=%d", $tid));
+        $node->content['title_tilt']['#value'] = strip_tags(t('!title is a !breed tilted his head on !date', array(
+          '!title' => l($node->dog->title, 'node/'. $node->dog->nid),
+          '!breed' => $node->content['breed']['#value'], 
+          '!date' => format_date($node->created,'custom', 'M d, Y')
+        )));
+        $node->content['share_facebook']['#value'] = dtth_share('facebook', 'node/' . $node->nid, FALSE, $node->content['title_tilt']['#value']);
+        $node->content['share_twitter']['#value'] = dtth_share('twitter', 'node/' . $node->nid, FALSE, $node->content['title_tilt']['#value']);
+        $node->content['tilt_total']['#value'] = $node->dog->field_tilt_total[0]['value'];
+                                        
+        
+        if (empty($node->viewpage)) {        
+        drupal_set_html_head('<meta property="og:title" content="'.$node->content['title_tilt']['#value'].'" />');
+        drupal_set_html_head('<meta property="og:description" content="'.$node->content['title_tilt']['#value'].' '.$share_desc.'" />');
+        $imagecache_url = imagecache_create_url('normal', $node->field_image[0]['filepath']);                                        
+        drupal_set_html_head('<meta property="og:image" content="'.$imagecache_url.'" />');
+        }        
+        $node->content['comment']['#value'] = dtth_comment_render($node);
+        
+      break;
+      case 'load':
+        $dog = node_load($node->field_dog[0]['nid']);
+        $node->field_other_image = $dog->field_image;        
+        $node->dog = $dog;
+      break;
+      case 'delete':
+        dtth_taxonomy_tilt_count($node);
+                
+        $imagedelete = array();                
+        foreach ($node->field_image as $key => $image) {
+          file_delete($image['filepath']);
+          $imagedelete[] = $image['filepath']; 
+        }
+        
+        // delete related image on dog
+        $dog = $node->dog;
+        $newimage = NULL;
+        foreach ($dog->field_image as $key => $image) {
+          if (!in_array($image['filepath'], $imagedelete) && file_exists($image['filepath'])) {
+            $newimage[] = $image;        
+          }
+        }        
+        $dog->field_image = $newimage;        
+        node_save($dog);                
+      break;
+    }    
+  }
+  
+  if ($node->type != 'dog') return;
+  switch ($op) {
+    case 'insert':
+      if ($node->field_breed[0]['value']) {        
+        dtth_taxonomy_dog_count($node);        
+      }                                                  
+        
+      /*if ($node->tilt_form_id) {
+        $form_state_tilt = array(
+          'storage' => NULL,
+          'submitted' => FALSE,
+          'test' => TRUE,
+        );                
+        $form_build_id = $node->tilt_form_id;        
+        $form_tilt = form_get_cache($form_build_id, $form_state_tilt);        
+        $args = $form_tilt['#parameters'];
+        $form_tilt_id = array_shift($args);
+        // We will run some of the submit handlers so we need to disable redirecting.
+        $form_tilt['#redirect'] = FALSE;  
+        $form_tilt['title']['#value'] = $node->title;
+        $form_tilt['field_breed']['#value']['value'] = $node->field_breed[0]['value'];    
+        $form_tilt['field_dog'][0]['#value'] = $node->nid;
+        drupal_process_form($form_tilt_id, $form_tilt, $form_state_tilt);
+      } */              
+      
+      foreach ($node->field_image as $key => $image) {
+        if (!file_exists($image['filepath'])) {
+          unset($node->field_image[$key]);
+          continue;
+        }      
+        $tilt = new stdClass();
+        $tilt->uid = $node->uid;
+        $tilt->type = 'tilt';
+        $tilt->title = $node->title;
+        $tilt->caption = $node->caption;
+        $tilt->comment = 2;
+        $tilt->field_dog[]['nid'] = $node->nid;
+        $tilt->field_breed = $node->field_breed;
+        $tilt->field_image[] = $image;
+        node_save($tilt); 
+        $node->field_image[$key]['data']['tilt_nid'] = $tilt->nid;       
+      }               
+          
+    break;
+    case 'update':
+      if ($node->field_breed[0]['value']) {        
+        dtth_taxonomy_dog_count($node);        
+      }
+      
+      // get existing image for this node
+      $result = db_query("SELECT t.nid, i.field_image_fid FROM {content_type_tilt} AS t INNER JOIN {content_field_image} AS i ON t.vid = i.vid WHERE t.field_dog_nid = %d",$node->nid);
+      $images_fid = array();
+      $images_nid = array();
+      while ($item = db_fetch_object($result)) {
+        $images_fid[] = $item->field_image_fid;
+        $images_nid[] = $item->nid;
+      }             
+      
+      // only save image to node tilt that not exist on current node            
+      foreach ($node->field_image as $key => $image) {                
+        if (!file_exists($image['filepath'])) {
+          db_query("DELETE FROM {content_field_image} WHERE nid=%d AND field_image_fid=%d", $node->nid, $image['fid']);
+          unset($node->field_image[$key]);          
+          continue;
+        }
+        // if image is uploaded from node dog form, but images is not exist, create new node tilt
+        if (!in_array($image['fid'], $images_fid)) {
+          $tilt = new stdClass();
+          $tilt->uid = $node->uid;
+          $tilt->type = 'tilt';
+          $tilt->title = $node->title;
+          $tilt->caption = $node->caption;
+          $node->comment = 2;
+          $tilt->field_dog[]['nid'] = $node->nid;
+          $tilt->field_breed = $node->field_breed;
+          $tilt->field_image[] = $image;
+          node_save($tilt);          
+          $node->field_image[$key]['data']['tilt_nid'] = $tilt->nid;
+        } else {          
+          // but if image already exist as node tilt then save the nid info
+          $tilt_key = array_search($image['fid'], $images_fid);
+          $tilt = node_load($images_nid[$tilt_key]);
+          // if node tilt still exist
+          if ($tilt) {
+            //$tilt->field_breed = $node->field_breed;
+            //node_save($tilt);
+            $node->field_image[$key]['data']['tilt_nid'] = $tilt->nid;
+          } else {
+            db_query("DELETE FROM {content_field_image} WHERE nid=%d AND field_image_fid=%d", $node->nid, $image['fid']);
+            // image not exist then delete the iamge
+            unset($node->field_image[$key]);          
+          }                    
+        }
+      }      
+      
+      // cleanup node field iamge
+      if (empty($node->field_image)) {
+        $node->field_image = NULL;                
+      }
+      
+      $node->field_tilt_total[0]['value'] = count($node->field_image);                              
+    break;  
+    case 'load':
+      foreach ($node->field_image as $key => $image) {
+        $tilt_nid = db_result(db_query("SELECT t.nid FROM {content_type_tilt} AS t INNER JOIN {content_field_image} AS i ON t.vid = i.vid WHERE t.field_dog_nid = %d AND i.field_image_fid = %d",$node->nid, $image['fid']));
+        $node->field_image[$key]['data']['tilt_nid'] = $tilt_nid; 
+      }
+    break;
+    case 'view': 
+      $term = taxonomy_get_term($node->field_breed[0]['value']);      
+      $node->content['breed']['#value'] = l($term->name, 'browse/breed/'.$term->tid);;
+      $node->content['tilt_total']['#value'] = $node->field_tilt_total[0]['value'];
+      $node->content['tilt_display']['#value'] = '';
+      $node->field_image = array_reverse($node->field_image);
+      foreach ($node->field_image as $key => $image) {
+        $tilt = node_load($image['data']['tilt_nid']);
+        $tilt->viewpage = 'dogdetail';
+        $node->content['tilt_display']['#value'] .= node_view($tilt, FALSE, FALSE); 
+      }
+
+      $node->content['title_dog']['#value'] = strip_tags(t('!title is a !breed and has tilted his head !tilt_total times!', array(
+        '!title' => l($node->title, 'node/'. $node->nid),
+        '!breed' => $node->content['breed']['#value'], 
+        '!tilt_total' => $node->content['tilt_total']['#value'],
+        '!date' => format_date($node->created,'custom', 'M d, Y')
+      )));
+      $node->content['share_facebook']['#value'] = dtth_share('facebook', 'node/' . $node->nid, FALSE, $node->content['title_dog']['#value']);
+      $node->content['share_twitter']['#value'] = dtth_share('twitter', 'node/' . $node->nid, FALSE, $node->content['title_dog']['#value']);
+      
+      if (empty($node->viewpage)) {        
+        drupal_set_html_head('<meta property="og:title" content="'.$node->content['title_dog']['#value'].'" />');
+        drupal_set_html_head('<meta property="og:description" content="'.$node->content['title_dog']['#value'].' '.$share_desc.'" />');
+        $imagecache_url = imagecache_create_url('normal', $node->field_image[0]['filepath']);                                        
+        drupal_set_html_head('<meta property="og:image" content="'.$imagecache_url.'" />');
+      }  
+    break;          
+    case 'delete':
+      dtth_taxonomy_dog_count($node);
+      foreach ($node->field_image as $key => $image) {
+        $tilt = node_load($image['data']['tilt_nid']);
+        node_delete($tilt->nid);
+      }
+    break;  
+  }
+}
+
+function dtth_votingapi_results_alter(&$results, $content_type, $content_id) {
+  if ($content_type == 'comment') {    
+    $criteria['content_type'] = 'comment';
+    $criteria['value_type'] = 'points';
+    $criteria['tag'] = 'vote';
+    $criteria['function'] = 'count';
+    
+    // init first value by results
+    $max = (int) $results[$criteria['tag']][$criteria['value_type']][$criteria['function']];
+    $max_cid = $content_id;
+    $max_created = time();        
+    
+    $nid = db_result(db_query("SELECT nid FROM {comments} WHERE cid=%d", $content_id));
+    $result = db_query("SELECT cid FROM {comments} WHERE nid=%d ORDER BY timestamp DESC", $nid);         
+    //$max = -999999;
+    //$max_created = -999999;
+    while ($item = db_fetch_object($result)) {
+      $criteria['content_id'] = $item->cid;      
+      $votes = votingapi_select_results($criteria, 1);           
+      if ($votes[0]['value'] && ($votes[0]['value'] >= $max)) {
+        $save = FALSE;
+        if ($votes[0]['value'] == $max) {
+          if ($votes[0]['timestamp'] >= $max_created) {
+            $save = TRUE;
+          }
+        } else {
+          $save = TRUE;
+        }
+        if ($save) {
+          $max = $votes[0]['value'];
+          $max_cid = $item->cid;
+          $max_created = $votes[0]['timestamp'];
+        }
+      }                           
+    }                       
+    db_query("UPDATE {node_comment_statistics} SET topvote_comment_cid=%d WHERE nid=%d", $max_cid, $nid);
+  }
+}
+
+
+function dtth_comment(&$a1, $op) {
+  if ($op == 'insert') {
+    $cid = $a1['cid'];
+    $nid = $a1['nid'];
+    db_query("UPDATE {node_comment_statistics} SET last_comment_cid=%d WHERE nid=%d", $cid, $nid);
+  }
+}
+
+function dtth_share($service, $path = NULL, $ownicon = FALSE, $message = '') {
+  if (!empty($message)) {
+    $message = strip_tags($message);
+  }
+  if (!$path) {
+    $url = url($_GET['q'], array('absolute' => TRUE));
+  } else {
+    $url = url($path, array('absolute' => TRUE));
+  }
+  if ($ownicon) {
+    switch ($service) {
+      case 'facebook':
+        $class = 'fb';
+        $query['u'] = $url;
+        $query['t'] = drupal_get_title();
+        $share_url = url('http://www.facebook.com/sharer.php', array('query' => $query));
+        $title = t('Share on Facebook');        
+      break;
+      case 'twitter':
+        $class = 'tw';        
+        //$query['data-url'] = $url;        
+        $query['via'] = 'dogtilt';
+        $share_url = url('http://www.twitter.com/share', array('query' => $query));
+        $query['text'] = str_replace(" ","+",$message);
+        $query['text'] = str_replace("'","\'",$query['text']);
+        $query['url'] = $url;
+        $share_url .= '&text=' . $query['text'];
+        $share_url .= '&url=' . $query['url'];
+        $title = t('Share on Twitter');                        
+      break;
+    }
+    return '<a title="'.$title.'" href="#" class="'.$class.'" onclick="window.open(\''.$share_url.'\',\''.$service.'\', \'menubar=no,width=620,height=440,toolbar=no,scrollbars=true\'); return false;">'.$service.'</a>';
+  } else {
+    switch ($service) {
+      case 'facebook':
+        $class = 'fb';
+        //$query['u'] = $url;
+        //$query['t'] = drupal_get_title();
+        //$url = url('http://www.facebook.com/sharer.php', array('query' => $query));
+        //$title = t('Share on Facebook');
+        return '<div class="fb"><fb:like href="'.$url.'" layout="button_count" width="50" show_faces="false" font=""></fb:like></div>';
+      break;
+      case 'twitter':
+        $class = 'tw';
+        
+        $query['via'] = 'dogtilt';
+        $share_url = url('http://platform.twitter.com/widgets/tweet_button.html', array('query' => $query));        
+        $query['text'] = $message;
+        $query['url'] = $url;
+        $share_url .= '&text=' . $query['text'];
+        $share_url .= '&url=' . $query['url'];
+        
+        //$query['url'] = $url;
+        //$query['text'] = t('Checkout my comment on DTTH');
+        //$query['via'] = 'dtth';
+        //$url = url('http://www.twitter.com/share', array('query' => $query));
+        //$title = t('Share on Twitter');
+        //return '<a title="'.$title.'" href="#" class="'.$class.'" onclick="window.open(\''.$url.'\',\''.$service.'\', \'menubar=no,width=620,height=440,toolbar=no,scrollbars=true\'); return false;">'.$service.'</a>';        
+        //return '<div class="tw"><a href="http://twitter.com/share" data-url="'.$url.'" class="twitter-share-button" data-count="horizontal" data-via="dogtilt" data-text="'.$message.'">Tweet</a></div>';
+        return '<div class="tw"><iframe allowtransparency="true" frameborder="0" scrolling="no"
+        src="'.$share_url.'" style="width:100px; height:20px;"></iframe></div>';
+      break;
+    }
+  }      
+}
+
+function dtth_comment_render($node, $cid = 0) {
+  $mode = _comment_get_display_setting('mode', $node);
+  $order = _comment_get_display_setting('sort', $node);
+  $comments_per_page = _comment_get_display_setting('comments_per_page', $node);
+  $nid = $node->nid;      
+  if ($cid == 0) {
+    $query = "SELECT c.cid as cid, c.pid, c.nid, c.subject, c.comment, c.format, c.timestamp, c.name, c.mail, c.homepage, u.uid, u.name AS registered_name, u.signature, u.signature_format, u.picture, u.data, c.thread, c.status FROM {comments} c INNER JOIN {users} u ON c.uid = u.uid LEFT JOIN {votingapi_cache} AS v ON c.cid = v.content_id AND v.content_type='comment' AND v.function='count' AND v.value_type='points' WHERE c.nid = %d AND c.status=0";
+    $query_args = array($nid);
+  } else {
+    $query = "SELECT c.cid as cid, c.pid, c.nid, c.subject, c.comment, c.format, c.timestamp, c.name, c.mail, c.homepage, u.uid, u.name AS registered_name, u.signature, u.signature_format, u.picture, u.data, c.thread, c.status FROM {comments} c INNER JOIN {users} u ON c.uid = u.uid LEFT JOIN {votingapi_cache} AS v ON c.cid = v.content_id AND v.content_type='comment' AND v.function='count' AND v.value_type='points' WHERE c.nid = %d AND c.cid = %d AND c.status=0";
+    $query_args = array($nid, $cid);
+    
+  }
+  
+  // sort by oldest first
+  //$query .= ' ORDER BY v.value DESC, SUBSTRING(c.thread, 1, (LENGTH(c.thread) - 1))';
+  // sort by newest first
+  $query .= ' ORDER BY c.cid DESC';
+  $query = db_rewrite_sql($query, 'c', 'cid');
+  $result = pager_query($query, $comments_per_page, 0, $query_count, $query_args);
+  
+  $comments = array();
+  while ($comment = db_fetch_object($result)) {
+    $comment = drupal_unpack($comment);
+    $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
+    $comment->depth = count(explode('.', $comment->thread)) - 1;    
+    $links = array();
+    $links = module_invoke_all('link', 'comment', $comment, 1);    
+    $query_fb['u'] = url('node/'. $node->nid, array('absolute' => TRUE));
+    $links['facebook'] = array(
+      //'title' => '<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script><fb:like href="" send="false" layout="button_count" width="450" show_faces="false" font=""></fb:like>',
+      'title' => dtth_share('facebook', 'node/'.$node->nid.'/caption/'. $comment->cid, TRUE, $node->content['title_tilt']['#value']), 
+      'html' => TRUE,
+    );    
+    $links['twitter'] = array(
+      //'title' => '<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script><fb:like href="" send="false" layout="button_count" width="450" show_faces="false" font=""></fb:like>',
+      //'title' => dtth_share('twitter', 'node/'.$node->nid, TRUE, $node->content['title_tilt']['#value']), 
+      'title' => dtth_share('twitter', 'node/'.$node->nid.'/caption/'. $comment->cid, TRUE, $comment->comment),
+      'html' => TRUE,
+    );
+    /*$links['twitter'] = array(
+      'title' => l('Twitter', 'node/'.$node->nid.'/comment/'.$comment->cid),
+      'html' => TRUE,
+    );
+    $links['facebook'] = array(
+      'title' => l('Facebook', 'node/'.$node->nid.'/comment/'.$comment->cid),
+      'html' => TRUE,
+    );*/
+    unset($links['comment_parent']);
+    unset($links['comment_delete']);
+    unset($links['comment_edit']);
+    unset($links['comment_reply']);
+        
+    drupal_alter('link', $links, $node, $comment);
+    
+    unset($links['comment_parent']);
+    
+    $comment->links = theme('links', $links);                    
+    $comment->links_element = $links;    
+    
+    $comments[] = theme('comment_view', $comment, $node, $links);    
+  }
+  
+  //return theme('item_list', $comments);
+  return implode("",$comments);
+  
+}
+
+function dtth_preprocess_node(&$variables) {
+  $node = $variables['node'];
+  if ($node->viewpage) {
+    $variables['template_files'][] = 'node-' . $node->type . '-' . $node->viewpage;
+  }  
+}  
+
+function dtth_preprocess_rate_template_thumbs_up(&$variables) {
+  extract($variables);
+  
+  $variables['up_button'] = theme('rate_button', $links[0]['text'], $links[0]['href'], 'like rate-thumbs-up-btn-up');
+
+  $info = array();
+  if ($mode == RATE_CLOSED) {
+    $info[] = t('Voting is closed.');
+  }
+      
+  
+  switch ($content_type) {
+    case 'node':
+      $node = node_load($variables['content_id']);
+      switch ($node->type) {        
+        default:
+          $variables['up_button'] = theme('rate_button', $links[0]['text'], $links[0]['href'], 'fav png_bg rate-thumbs-up-btn-up');
+          if ($mode != RATE_COMPACT && $mode != RATE_COMPACT_DISABLED) {
+            if ($results['user_vote']) {
+              $info[] = format_plural($results['count'], 'Only you favorited this.', '@count favorited this.');
+              //$info[] = $results['count'];
+            }
+            else {
+              $info[] = format_plural($results['count'], '@count favorited this.', '@count favorited this.');
+              //$info[] = $results['count'];
+            }
+          }
+        break;
+      }      
+    break;
+    case 'comment':
+      if ($mode != RATE_COMPACT && $mode != RATE_COMPACT_DISABLED) {
+        if ($results['user_vote']) {
+          //$info[] = format_plural($results['count'], 'Only you voted.', '@count users have voted, including you.');
+          $info[] = $results['count'];
+        }
+        else {
+          //$info[] = format_plural($results['count'], '@count user has voted.', '@count users have voted.');
+          $info[] = $results['count'];
+        }
+      }
+    break;
+    default:
+      if ($mode != RATE_COMPACT && $mode != RATE_COMPACT_DISABLED) {
+        if ($results['user_vote']) {
+          $info[] = format_plural($results['count'], 'Only you voted.', '@count users have voted, including you.');          
+        }
+        else {
+          $info[] = format_plural($results['count'], '@count user has voted.', '@count users have voted.');
+        }
+      }    
+    break;
+  }
+    
+  $variables['info'] = implode(' ', $info);  
+}
+
+
+function dtth_pathauto($op) {
+  switch ($op) {
+    case 'settings':
+      $settings = array();
+      $settings['module'] = 'dtth';
+      $settings['token_type'] = 'taxonomy';
+      $settings['groupheader'] = t('Browse breed settings');
+      $settings['patterndescr'] = t('Pattern for browse breed pages');
+      $settings['patterndefault'] = t('browse/breed/[cat-raw]');
+      $patterns = token_get_list('taxonomy');
+      foreach ($patterns as $type => $pattern_set) {
+        if ($type != 'global') {
+          foreach ($pattern_set as $pattern => $description) {
+            $settings['placeholders']['['. $pattern .']'] = $description;
+          }
+        }
+      }      
+      $settings['bulkname'] = t('Bulk generate aliases for browse breed pages that are not aliased');
+      $settings['bulkdescr'] = t('Generate aliases for all existing browse breed pages which do not already have aliases. Note: Bulk Update may not complete on large or slow sites. See the README.txt for more information.');
+
+    return (object) $settings;
+  }
+}
+
+/**
+ * Implementation of hook_pathauto_bulkupdate().
+ *
+ * Generate aliases for all categories without aliases
+ */
+function dtth_pathauto_bulkupdate() {
+  $catalog_vid = VOCABULARY_BREED;
+  $query = "SELECT tid, vid, name, src, dst FROM {term_data} LEFT JOIN {url_alias} ON src LIKE CONCAT('browse/breed/', CAST(tid AS CHAR)) WHERE src IS NULL AND vid = %d";
+  $result = db_query_range($query, $catalog_vid, 0, variable_get('pathauto_max_bulk_update', 50));
+
+  $count = 0;
+  $placeholders = array();
+  while ($category = db_fetch_object($result)) {
+    $count = _dtth_pathauto_alias($category, 'bulkupdate') + $count;
+  }
+
+  drupal_set_message(format_plural($count,
+    "Bulk generation of terms completed, @count alias generated.",
+    "Bulk generation of terms completed, @count aliases generated."));
+}
+
+function _dtth_pathauto_alias($category, $op) {
+  _pathauto_include();
+  $count = 0;
+
+  if ($category->vid == VOCABULARY_BREED){
+    $placeholders = pathauto_get_placeholders('taxonomy', $category);
+
+    //$src = uc_catalog_path($category);
+    $src = 'browse/breed/' . $category->tid;
+    if ($alias = pathauto_create_alias('dtth', $op, $placeholders, $src, $category->vid)) {
+      $count++;
+    }
+  }
+
+  return $count;
+}

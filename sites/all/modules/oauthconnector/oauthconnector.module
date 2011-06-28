@@ -1,0 +1,527 @@
+<?php
+
+/**
+ * @file
+ * OAuth Connector module
+ */
+
+//TODO: Trim URL of any trailing slashes/spaces
+//TODO: Save the link between a provider specification and a consumer key in a separate table?
+//      Perhaps extend OAuth Commons GUI for that?
+//TODO: Add timeouts for when an API is down?
+//TODO: Make it possible to specify mapping resources relative to the base url as well
+//TODO: Clean up the exports from default values?
+//TODO: Add warning if a connector that needs querypath is activated without querypath being that
+//TODO: Remove a users old token if he has signed in with a new one? That would be a sign that the old one has been revoked
+//TODO: Remove warning about email verification?
+//TODO: Better error handling - don't let exceptions through
+//TODO: Act on the deletion of a user?
+//TODO: Add more hooks on eg. addition of a connection? Do it here or in Connector? In Connector probably…
+//TODO: watchdog() is awesome - use it!
+
+/* ************************************************************************* *
+ * DRUPAL HOOKS
+ * ************************************************************************* */
+
+/**
+ * Implementation of hook_connector().
+ */
+function oauthconnector_connector() {
+  $items = array();
+
+  $base = array(
+    'button callback'         => '_oauthconnector_button',
+    'connect button callback' => '_oauthconnector_connect_button',
+  );
+
+  $providers = oauthconnector_provider_load_all();
+  foreach ($providers as $provider) {
+    if ($provider->csid) {
+      $items['oauthconnector_' . $provider->name] = array(
+        'title' => $provider->title,
+        'oauthconnector provider' => $provider,
+      ) + $base;
+      if (isset($provider->mapping['fields']['real name'])) {
+        $items['oauthconnector_' . $provider->name]['information callback'] = '_oauthconnector_info';
+      }
+      if (isset($provider->mapping['fields']['avatar'])) {
+        $items['oauthconnector_' . $provider->name]['avatar callback'] = '_oauthconnector_avatar';
+      }
+    }
+  }
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function oauthconnector_perm() {
+  return array('administer oauth connector');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function oauthconnector_menu() {
+  $items = array();
+
+  $base = array(
+    'access arguments' => array('administer oauth connector'),
+    'file'             => 'oauthconnector.admin.inc',
+  );
+
+  $items['admin/build/oauthconnector'] = array(
+    'title'          => 'OAuth Connector',
+    'description'    => 'Add, edit and remove OAuth Connector providers from the system.',
+    'page callback'  => 'oauthconnector_list_provider',
+  ) + $base;
+  $items['admin/build/oauthconnector/list'] = array(
+    'title'          => 'List',
+    'page callback'  => 'oauthconnector_list_provider',
+    'type'           => MENU_DEFAULT_LOCAL_TASK,
+    'weight'         => -10,
+  ) + $base;
+  $items['admin/build/oauthconnector/add'] = array(
+    'title'          => 'Add provider',
+    'page callback'  => 'oauthconnector_add_provider',
+    'type'           => MENU_LOCAL_TASK,
+  ) + $base;
+  $items['admin/build/oauthconnector/%oauthconnector_provider/edit'] = array(
+    'title'          => 'Edit provider',
+    'page callback'  => 'oauthconnector_edit_provider',
+    'page arguments' => array(3),
+    'type'           => MENU_LOCAL_TASK,
+  ) + $base;
+  $items['admin/build/oauthconnector/%oauthconnector_provider/export'] = array(
+    'title'          => 'Export provider',
+    'page callback'  => 'drupal_get_form',
+    'page arguments' => array('oauthconnector_export_provider', 3),
+    'type'           => MENU_LOCAL_TASK,
+  ) + $base;
+  $items['admin/build/oauthconnector/%oauthconnector_provider/delete'] = array(
+    'title'          => 'Delete provider',
+    'page callback'  => 'drupal_get_form',
+    'page arguments' => array('oauthconnector_delete_confirm_provider', 3),
+    'type'           => MENU_CALLBACK,
+  ) + $base;
+  $items['admin/build/oauthconnector/%oauthconnector_provider/disable'] = array(
+    'page callback'  => 'oauthconnector_disable_provider',
+    'page arguments' => array(3),
+    'type'           => MENU_CALLBACK,
+  ) + $base;
+  $items['admin/build/oauthconnector/%oauthconnector_provider/enable'] = array(
+    'page callback'  => 'oauthconnector_enable_provider',
+    'page arguments' => array(3),
+    'type'           => MENU_CALLBACK,
+  ) + $base;
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_oauth_common_authorized().
+ */
+function oauthconnector_oauth_common_authorized($consumer, $access_token, $request_token) {
+  global $user;
+
+  if ($_SESSION['oauthconnector_request_key'] == $request_token->key) {
+    unset($_SESSION['oauthconnector_request_key']);
+
+    $providers = oauthconnector_provider_load_all();
+    foreach ($providers as $provider) {
+      if ($provider->csid == $consumer->csid) {
+        //TODO: Only loop through active providers?
+        //TODO: Optionally remove the access token - if the provider was only used for log in
+        //      and not for fetching any data then we don't need the access token anymore.
+        //TODO: Check for whether this connector will be fetching name and avatar - if not then remove the access token?
+        //      Will need to check for whether someone else would like to use the access token as well.
+        //$access_token->delete();
+        $external_uid = _oauthconnector_fetch_field('uid', $provider, $access_token, $consumer);
+        if (!empty($external_uid)) {
+          $connect = FALSE;
+          if (empty($_SESSION['oauthconnector_login'])) {
+            if ($user->uid) {
+              $connect = _connector_add_connection('oauthconnector_' . $provider->name, $external_uid, $user->uid);
+            }
+          }
+          else if (!$user->uid) {
+            $connect = _connector_log_in('oauthconnector_' . $provider->name, $external_uid);
+          }
+          if ($connect) {
+            $access_token->uid = $user->uid;
+            $access_token->write(TRUE);
+
+            //TODO: Clean up connection on token removal and connection removal
+            $old_access_token = oauthconnector_get_connection_token($provider, $external_uid);
+            if (!$old_access_token || $old_access_token->tid != $access_token->tid) {
+              $connection = array('tid' => $access_token->tid, 'cid' => $external_uid);
+              drupal_write_record('oauthconnector_connections', $connection, $old_access_token ? array('cid') : array());
+            }
+            if ($old_access_token && $old_access_token->tid != $access_token->tid) {
+              $old_access_token->delete();
+            }
+
+            //TODO: Include this in _connector_log_in()?
+            //TODO: (Why do we do this at all? Isn't this taken care of by realname itself? Is it to ensure that we will be given access?)
+            $info = _connector_information_fetch($user->uid, array('real name' => TRUE));
+            if (empty($info['real name'])) {
+              _connector_information_update($user->uid, array('real name' => TRUE));
+            }
+            if (!empty($_SESSION['oauthconnector_destination'])) {
+              $_REQUEST['destination'] = $_SESSION['oauthconnector_destination'];
+              unset($_SESSION['oauthconnector_destination']);
+              drupal_goto();
+            }
+          }
+        }
+        else {
+          //TODO: Add error message
+        }
+        break;
+      }
+    }
+  }
+}
+
+/* ************************************************************************* *
+ * CTOOLS INTEGRATION
+ * ************************************************************************* */
+
+/**
+ * Create a new provider with defaults appropriately set from schema.
+ *
+ * @return stdClass
+ *   A provider configuration initialized with the default values.
+ */
+function oauthconnector_provider_new() {
+  ctools_include('export');
+  return ctools_export_new_object('oauthconnector_provider');
+}
+
+/**
+ * Load a single provider.
+ *
+ * @param string $name
+ *   The name of the provider.
+ * @return stdClass
+ *   The provider configuration.
+ */
+function oauthconnector_provider_load($name) {
+  ctools_include('export');
+  $result = ctools_export_load_object('oauthconnector_provider', 'names', array($name));
+  if (isset($result[$name])) {
+    return $result[$name];
+  }
+  else {
+    return FALSE;
+  }
+}
+
+//TODO: Add method for loading only "active" oauthconnectors? Eg. those with a consumer_key? Or make it impossible to enable a provider without also supplying a consumer_key and secret?
+
+/**
+ * Load all providers.
+ *
+ * @return array
+ *   Array of provider configuration objects keyed by provider names.
+ */
+function oauthconnector_provider_load_all() {
+  ctools_include('export');
+  return ctools_export_load_object('oauthconnector_provider');
+}
+
+/**
+ * Saves a provider in the database.
+ *
+ * @return void
+ */
+function oauthconnector_provider_save($provider) {
+  $update = (isset($provider->pid)) ? array('pid') : array();
+
+  if ($provider->csid || (!empty($provider->consumer_key) && !empty($provider->consumer_secret))) {
+    $consumer = $provider->csid ? DrupalOAuthConsumer::loadById($provider->csid, FALSE) : FALSE;
+
+    if ($consumer) {
+      $consumer->key = $provider->consumer_key;
+      $consumer->secret = $provider->consumer_secret;
+      $consumer->configuration['provider_url'] = $provider->url;
+      $consumer->configuration['signature_method'] = $provider->consumer_advanced['signature method'];
+      $consumer->configuration['authentication_realm'] = $provider->consumer_advanced['authentication realm'];
+      $consumer->configuration['access_endpoint'] = $provider->consumer_advanced['access token endpoint'];
+      $consumer->write(TRUE);
+    }
+    else {
+      $consumer = new DrupalOAuthConsumer($provider->consumer_key, $provider->consumer_secret, array(
+        'configuration' => array(
+          'provider_url'         => $provider->url,
+          'signature_method'     => $provider->consumer_advanced['signature method'],
+          'authentication_realm' => $provider->consumer_advanced['authentication realm'],
+          'access_endpoint'      => $provider->consumer_advanced['access token endpoint'],
+        )
+      ));
+      $consumer->write();
+      $provider->csid = $consumer->csid;
+    }
+  }
+
+  drupal_write_record('oauthconnector_provider', $provider, $update);
+}
+
+/**
+ * Remove a provider.
+ *
+ * @return void
+ */
+function oauthconnector_provider_delete($provider) {
+  if ($provider->csid) {
+    DrupalOAuthConsumer::deleteConsumer($provider->csid);
+  }
+  db_query("DELETE FROM {oauthconnector_provider} WHERE name = '%s' AND pid = %d", $provider->name, $provider->pid);
+}
+
+/**
+ * Export a provider.
+ *
+ * @return string
+ */
+function oauthconnector_provider_export($provider, $indent = '') {
+  ctools_include('export');
+  $output = ctools_export_object('oauthconnector_provider', $provider, $indent);
+  return $output;
+}
+
+/**
+ * Lists all available providers.
+ *
+ * @return array
+ */
+function oauthconnector_provider_list() {
+  $return = array();
+  $providers = oauthconnector_provider_load_all();
+  foreach ($providers as $provider) {
+    $return[$provider->name] = $provider->title;
+  }
+  return $return;
+}
+
+/**
+ * Finds the token for a connection.
+ *
+ * @return object
+ */
+function oauthconnector_get_connection_token($provider, $cid) {
+  $result = db_query("SELECT t.* FROM {oauth_common_token} t
+    INNER JOIN {oauthconnector_connections} c ON c.tid = t.tid
+    WHERE t.csid = %d AND c.cid = '%s'", array(
+      ':csid' => $provider->csid,
+      ':cid'  => $cid,
+    ));
+  $token = DrupalOAuthToken::fromResult($result);
+
+  return $token;
+}
+
+/* ************************************************************************* *
+ * OAUTH INTEGRATION
+ * ************************************************************************* */
+
+/**
+ * Information callback
+ */
+function _oauthconnector_info($connector, $cid, $types) {
+  if (!empty($types) && empty($types['real name'])) {
+    return FALSE;
+  }
+
+  $info = array();
+
+  $provider = $connector['oauthconnector provider'];
+
+  if (!empty($provider->mapping['fields']['real name']['resource'])) {
+    $token     = oauthconnector_get_connection_token($connector['oauthconnector provider'], $cid);
+    $real_name = _oauthconnector_fetch_field('real name', $provider, $token);
+    //TODO: If $real_name is false - shouldn't we return that to trigger ther backing of mechanism?
+    if ($real_name) {
+      $info = array('real name' => $real_name);
+    }
+  }
+
+  return $info;
+}
+
+/**
+ * Information callback
+ */
+function _oauthconnector_avatar($connector, $cid) {
+  $info = FALSE;
+
+  $provider = $connector['oauthconnector provider'];
+
+  if (!empty($provider->mapping['fields']['avatar']['resource'])) {
+    $token = oauthconnector_get_connection_token($connector['oauthconnector provider'], $cid);
+    $info  = _oauthconnector_fetch_field('avatar', $provider, $token);
+    if (empty($info)) {
+      $info = FALSE;
+    }
+  }
+
+  return $info;
+}
+
+function _oauthconnector_button($form, &$form_state, $login = TRUE) {
+  global $user;
+
+  //TODO: Move some of the contens of this function to oauth_common_get_request_token()?
+
+  $provider = $form_state['clicked_button']['connector']['#value']['oauthconnector provider'];
+  $callback_url = url('oauth/authorized', array('absolute' => TRUE));
+
+  $consumer = DrupalOAuthConsumer::loadById($provider->csid, FALSE);
+  $sig_method = DrupalOAuthClient::signatureMethod(substr(strtolower($provider->consumer_advanced['signature method']), 5));
+
+  $client = new DrupalOAuthClient($consumer, NULL, $sig_method);
+  //TODO: Deal with errors! Add a try-catch
+  $request_token = $client->getRequestToken($provider->consumer_advanced['request token endpoint'], array(
+    'realm' => $provider->consumer_advanced['authentication realm'],
+    'callback' => $callback_url,
+  ));
+
+  if (!$login) {
+    $request_token->uid = $user->uid;
+  }
+
+  $request_token->write();
+
+  //TODO: If 'oauthconnector_request_key' is already set - then remove the old one - we can only use one at a time
+  $_SESSION['oauthconnector_request_key'] = $request_token->key;
+  $_SESSION['oauthconnector_login']       = $login;
+  $auth_url = $client->getAuthorizationUrl($provider->consumer_advanced['authorization endpoint'], array(
+    'callback' => $callback_url,
+  ));
+
+  if (isset($_REQUEST['destination'])) {
+    $destination = $_REQUEST['destination'];
+    unset($_REQUEST['destination']);
+  }
+  elseif (isset($_REQUEST['edit']['destination'])) {
+    $destination = $_REQUEST['edit']['destination'];
+    unset($_REQUEST['edit']['destination']);
+  }
+  else {
+   $destination = isset($_GET['q']) ? $_GET['q'] : '';
+    $query = drupal_query_string_encode($_GET, array('q'));
+    if ($query != '') {
+      $destination .= '?'. $query;
+    }
+  }
+
+  $_SESSION['oauthconnector_destination'] = $destination;
+
+  drupal_goto($auth_url);
+}
+
+function _oauthconnector_connect_button($form, &$form_state) {
+  _oauthconnector_button($form, &$form_state, FALSE);
+}
+
+function _oauthconnector_fetch_field($field, $provider, $access_token, $consumer = NULL) {
+  static $cache = array();
+
+  $field = $provider->mapping['fields'][$field];
+
+  if (!isset($cache[$access_token->token_key])) {
+    $cache[$access_token->token_key] = array();
+  }
+  if (!isset($cache[$access_token->token_key][$field['method post']])) {
+    $cache[$access_token->token_key][$field['method post']] = array();
+  }
+
+  if (!isset($cache[$access_token->token_key][$field['method post']][$field['resource']])) {
+    // Load the consumer token if needed
+    if (!$consumer) {
+      $consumer = DrupalOAuthConsumer::loadById($provider->csid, FALSE);
+    }
+
+    // Set up the rest client
+    $sig_method = DrupalOAuthClient::signatureMethod(substr(strtolower($provider->consumer_advanced['signature method']), 5));
+    $realm = empty($provider->consumer_advanced['authentication realm']) ? NULL : $provider->consumer_advanced['authentication realm'];
+    $auth = new HttpClientOAuth($consumer, $access_token, $sig_method, TRUE, TRUE, $realm);
+
+    switch ($provider->mapping['format']) {
+      case 'xml':
+        $formatter = new HttpClientXMLFormatter();
+        break;
+      case 'php':
+        $formatter = new HttpClientBaseFormatter(HttpClientBaseFormatter::FORMAT_PHP);
+        break;
+      default:
+        $formatter = new HttpClientBaseFormatter(HttpClientBaseFormatter::FORMAT_JSON);
+        break;
+    }
+    $client = new HttpClient($auth, $formatter);
+
+    // Fetch the external user
+    $request_method = empty($field['method post']) ? 'get' : 'post';
+    try {
+      $info = (array)$client->{$request_method}($field['resource']);
+      $cache[$access_token->token_key][$field['method post']][$field['resource']] = $info;
+    } catch (Exception $e) {
+      if (is_a($e, 'HttpClientException')) {
+        if ($e->getCode() == 401) {
+          //TODO: Save the failure in some way so that we can stop trying to use a revoked token?
+          watchdog('oauthconnector', "User !uid not authenticated for %resource: @message", array(
+            '!uid' => $access_token->uid,
+            '%resource' => $field['resource'],
+            '@message' => $e->getMessage(),
+          ), WATCHDOG_WARNING);
+        }
+        elseif ($e->getCode() == 400) {
+          watchdog('oauthconnector', "Bad request of %resource: @message", array(
+            '%resource' => $field['resource'],
+            '@message' => $e->getMessage(),
+          ), WATCHDOG_ERROR);
+        }
+      }
+      else {
+        watchdog('oauthconnector', 'Failed to fetch of %resource: @message', array(
+          '%resource' => $field['resource'],
+          '@message' => $e->getMessage(),
+        ), WATCHDOG_WARNING);
+      }
+    }
+  }
+  else {
+    $info = $cache[$access_token->token_key][$field['method post']][$field['resource']];
+  }
+
+  $response = FALSE;
+
+  if (!empty($info)) {
+    if (!empty($field['querypath']) && module_exists('querypath')) {
+      //TODO: Perhaps cache this QueryPath object as well?
+      $response = _oauthconnector_object_to_qp(qp('<?xml version="1.0"?><reponse/>'), $info)->find($field['field'])->eq(0)->text();
+    }
+    elseif (!empty($info[$field['field']])) {
+      $response = $info[$field['field']];
+    }
+  }
+
+  return $response;
+}
+
+function _oauthconnector_object_to_qp($qp, $values) {
+  foreach ($values as $key => $val) {
+    if (is_object($val)) {
+      $val = get_object_vars($val);
+    }
+    $key = check_plain(str_replace(' ', '_', $key));
+    if (is_array($val)) {
+      $qp->append(_oauthconnector_object_to_qp(qp('<?xml version="1.0"?><' . $key . '/>'), $val));
+    }
+    else {
+      $qp->append(qp('<?xml version="1.0"?><' . $key . '>' . check_plain($val) . '</' . $key . '>'));
+    }
+  }
+  return $qp;
+}

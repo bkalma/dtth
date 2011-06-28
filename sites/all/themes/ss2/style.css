@@ -1,0 +1,230 @@
+body {
+background-color:#5F564D;
+margin:0px;
+padding:0px;
+font: 12px  verdana, arial, helvetica;
+color:#777c7c;
+}
+p{
+margin:0px;
+padding:0 0 5px 0;
+line-height:17px;
+text-align:justify;
+}
+p.about_text{
+padding:5px 0 5px 0;
+font-size:12px;
+color:#FFFFFF;
+}
+h1{
+color:#a0672e;
+font-size:12px;
+font-weight:bold;
+margin:0px;
+padding:5px 0 5px 0;
+}
+#main_container{
+width:950px;
+height:auto;
+margin:auto;
+background:url(images/main_bg.gif) no-repeat top center #f0f0d8;
+}
+#center_content{
+width:895px;
+margin:auto;
+}
+#header{
+width:895px;
+height:130px;
+margin:auto;
+}
+#logo{
+padding:60px 0 0 0;
+float:left;
+}
+/*----------------------menu-------------------------*/
+#menu{
+width:460px;
+height: auto;
+float:left;
+padding:105px 0 0 70px;
+}
+#menu ul{
+list-style:none;padding:0px;margin:0px;display:block; font-weight:bold;
+}
+#menu ul li{
+list-style:none;display:inline;float:left;width:auto;height:12px;padding:0px;font-size:12px;
+}
+#menu ul li a{
+height:12px; width: auto;float:left;text-decoration:none;padding:0 8px 0 17px; margin:0px;color:#9d8f9b; font-weight:bold; 
+}
+#menu ul li a:hover, #menu ul li a.active{
+height:12px;width: auto;text-decoration:none;color: #857283; background:url(images/menu_checked.gif) no-repeat left;
+}
+
+#middle_box{
+width:895px;
+height:278px;
+clear:both;
+margin:auto;
+background:url(images/middle_bg.jpg) no-repeat center;
+}
+.middle_box_content{
+width:370px;
+padding:20px 0 0 30px;
+}
+.title_journal{
+height:26px;font-size:16px;font-weight:bold;padding:5px 0 0 35px;color:#a0672e;background:url(images/icon_journal.gif) no-repeat left;background-position:0px 0px;
+}
+.title_photos{
+height:26px;font-size:16px;font-weight:bold;padding:5px 0 0 35px;color:#a0672e;background:url(images/icon_photo.gif) no-repeat left;background-position:0px 0px;
+}
+.title_friends{
+height:26px;font-size:16px;font-weight:bold;padding:5px 0 0 35px;color:#a0672e;background:url(images/icon_friends.gif) no-repeat left;background-position:0px 0px;
+}
+a.more {
+display:block;
+text-decoration:none;
+float:right;
+margin:5px 0 15px 0;
+}
+/*---------------------main_content------------------*/
+.left_content{
+width:480px;
+height:auto;
+float:left;
+padding:10px 10px 15px 0;
+}
+.right_content{
+width:390px;
+height:auto;
+float:left;
+padding:10px 0 0 10px;
+}
+.news_tab{
+padding:10px 0 5px 0;
+margin:0px;
+text-align:justify;
+line-height:14px;
+border-bottom:1px #b2bbbb dashed;
+}
+.blogdate{
+padding:5px 0 0 0;
+text-align:right;
+font-size:11px;
+font-weight:bold;
+color:#a0672e;
+}
+
+img.photo{
+padding:10px;
+}
+.clear{
+clear:both;
+}
+/*----------------------friends_list-------------------------*/
+.friends_list ul{
+list-style:none;padding:0px 10px 10px 0px;margin:0px; 
+}
+.friends_list ul li{
+list-style:none;width: auto;height: auto;padding:0px;
+}
+.friends_list ul li a{
+height: 16px; width: auto; display:block;padding:0 0 0 20px; margin:10px 10px 10px 12px;color:#a0672e;text-align:left; font-weight:bold; font-size:11px;
+background:url(images/list_checked.gif) no-repeat left; background-position:0px 0px;text-decoration:none;
+}
+.friends_list ul li a:hover{
+height: 16px; width: auto;text-decoration:none;color: #533920;
+}
+/*-----------------------------footer------------------*/
+#footer{
+width:895px;
+height:48px;
+margin:auto;
+color:#508aa1;
+border-top:1px #b2bbbb dashed;
+}
+.copyright{
+float:left;
+padding-left:15px;
+padding-top:7px;
+}
+.footer_links{
+float:right;
+padding-right:15px;
+padding-top:7px;
+}
+
+/* added by Cakkavati Kusuma */
+.breadcrumb{
+	padding:15px 0;	
+}
+
+.breadcrumb a{
+	color:#857283;
+	text-decoration:none;
+}
+
+.item-list ul li{
+	margin-left:0;	
+}
+
+#block-views-portofolios-block_1 img{
+	padding:3px;
+	margin:5px 10px;
+	background:#FFFFFF;
+}
+
+h2 a{
+color:#a0672e;
+font-size:12px;
+font-weight:bold;
+margin:0px;
+padding:5px 0 5px 0;
+text-decoration:none;
+}
+
+h2 a:hover{
+	text-decoration:underline;
+}
+
+hr.news_details{
+	border-top:none;
+	border-left:none;
+	border-right:none;
+	border-bottom:1px #b2bbbb dashed;
+}
+
+ul.pager a{
+	color:#6c892f;
+	text-decoration:none;	
+}
+
+ul.pager {
+	color:#6c892f;
+}
+
+ul.pager a{
+	color:#6c892f;
+	text-decoration:none;	
+}
+ul.pager a:hover{
+	text-decoration:underline;	
+}
+
+#webform-client-form-4 label{
+	float:left;	
+	width:100px;
+}
+
+#webform-client-form-4 input{
+	width:275px;
+}
+
+#webform-client-form-4 textarea{
+	width:375px;
+}
+
+#webform-client-form-4 input.form-submit{
+	width:auto;
+}

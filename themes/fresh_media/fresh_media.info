@@ -1,0 +1,34 @@
+; $Id: fresh_media.info,v 1.1 2008/08/12 20:32:34 doncoryon Exp $
+name = Fresh Media
+description = Simply beautiful theme with a light blue color scheme with a green wet leaf for eye popping focal point. XHTML and CSS stanards compliant. Ported by Goodwin Web Solutions - http://goodwinsoultions.com
+version = VERSION
+core = 6.x
+engine = phptemplate
+
+; REGIONS
+
+regions[right] = Right sidebar
+regions[content] = Content
+regions[footer1] = Footer1
+regions[footer2] = Footer2
+regions[footer3] = Footer3
+
+; FEATURES
+
+features[] = name
+features[] = slogan
+features[] = mission
+features[] = node_user_picture
+features[] = comment_user_picture
+features[] = search
+features[] = favicon
+; These last two disabled by redefining the
+; above defaults with only the needed features.
+; features[] = primary_links
+; features[] = secondary_links
+; Information added by drupal.org packaging script on 2008-08-15
+version = "6.x-2.1"
+core = "6.x"
+project = "fresh_media"
+datestamp = "1218842719"
+

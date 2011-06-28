@@ -1,0 +1,5 @@
+name = DTTH
+description = DTTH Custom Module
+core = 6.x
+package = DTTH
+php = 5

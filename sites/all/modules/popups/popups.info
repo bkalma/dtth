@@ -1,0 +1,12 @@
+name = Popups API
+description = General dialog creation utilities
+package = User interface
+core = 6.x
+
+
+; Information added by drupal.org packaging script on 2011-04-22
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "popups"
+datestamp = "1303432814"
+

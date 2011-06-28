@@ -1,0 +1,13 @@
+ul.connector-buttons {
+  padding: 0;
+  list-style: none;
+}
+ul.connector-buttons li {
+  margin: 0;
+  padding: 0;
+  display: inline;
+  background: none;
+}
+.connector-buttons input {
+  margin: 0;
+}

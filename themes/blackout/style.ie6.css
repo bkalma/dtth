@@ -1,0 +1,20 @@
+.sidebars-2 #main
+{
+  float: left;
+  width: 54%;
+}
+
+div.admin .left
+{
+  margin-left: .5em;
+}
+
+div.admin .right
+{
+  margin-right: .5em;
+}
+
+#sidebar-right,#sidebar-left
+{
+  width: 20%;
+}

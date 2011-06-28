@@ -1,0 +1,15 @@
+name = Skyshi Theme
+description = Tableless, recolorable, multi-column, fluid width theme (default).
+version = VERSION
+core = 6.x
+engine = phptemplate
+stylesheets[all][] = style.css
+
+regions[left] = Left sidebar
+regions[right] = Right sidebar
+regions[content] = Content
+regions[header] = Header
+regions[footer] = Footer
+regions[right_top] = Right Top
+regions[bottom1] = Bottom1
+regions[bottom2] = Bottom2

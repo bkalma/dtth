@@ -1,0 +1,12 @@
+name = SmartCrop
+description = Crops low-entropy parts of the image.
+core = 6.x
+dependencies[] = imagecache
+dependencies[] = imageapi_gd
+package = ImageCache
+; Information added by drupal.org packaging script on 2011-02-25
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "smartcrop"
+datestamp = "1298620225"
+

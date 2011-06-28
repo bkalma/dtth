@@ -1,0 +1,21 @@
+; $Id: blackout.info,v 1.1 2009/05/15 07:28:05 agileware Exp $
+name = Blackout
+description = Tableless, multi-column, fixed width theme
+core = 6.x
+engine = phptemplate
+regions[left] = Left sidebar
+regions[right] = Right sidebar
+regions[content] = Content
+regions[footer] = Footer
+features[] = name
+features[] = slogan
+features[] = mission
+features[] = comment_user_picture
+features[] = favicon
+features[] = primary_links
+; Information added by drupal.org packaging script on 2009-05-15
+version = "6.x-1.0-beta1"
+core = "6.x"
+project = "blackout"
+datestamp = "1242373513"
+

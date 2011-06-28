@@ -1,0 +1,16 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Taxonomy_batch_operations install hook.
+ *
+ * No need of uninstall hook because module adds nothing except terms.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function taxonomy_batch_operations_install() {
+  drupal_set_message(st('Taxonomy_batch_operations has been installed. You can now import, edit and remove taxonomies or list of terms under <a href="!link_taxonomy">Administer > Content management > Taxonomy</a>.', array('!link_taxonomy' => url('admin/content/taxonomy'))));
+}

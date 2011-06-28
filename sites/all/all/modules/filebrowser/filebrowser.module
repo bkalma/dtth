@@ -1,0 +1,56 @@
+<?php
+function filebrowser_perm() {
+  return array(
+    'access filebrowser',
+    'create folder',
+    'edit folder',
+    'delete folder',
+    'download folder',
+    'create files',
+    'edit files',
+    'delete files',
+    'download files',
+  );
+}
+
+function filebrowser_menu() {
+  $items = array();
+
+  $items['filebrowser'] = array(
+    'title'            => 'File Browser',
+    'page callback'    => 'filebrowser_page',
+    'access arguments' => array('access filebrowser'),
+    'weight'           => 12,
+    'type'             => MENU_NORMAL_ITEM,
+  );
+
+  $items['filebrowser/test'] = array(
+    'title'            => 'Test',
+    'page callback'    => 'filebrowser_test',
+    'access arguments' => array('access filebrowser'),
+    'weight'           => 13,
+    'type'             => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function filebrowser_page(){
+  drupal_add_js(drupal_get_path('module','filebrowser').'/jqueryFileTree.js','module');
+  drupal_add_css(drupal_get_path('module','filebrowser').'/jqueryFileTree.css','module');
+  
+  $output='<div id="fileTree" class="filetreeview"></div>';
+  
+  drupal_add_js("$(document).ready( function() {
+    $('#fileTree').fileTree({ root: '/home/imacat/public_html/sites/im-a-cat.com/files/', script: '".drupal_get_path('module','filebrowser')."/jqueryFileTree.php', multiFolder: false },
+    function(file) { 
+			alert(file);
+		});
+  });"
+  ,'inline');
+  return($output);
+}
+
+function filebrowser_test(){
+  
+}

@@ -1,0 +1,309 @@
+# $Id$
+#
+# Swedish translation of Drupal (content_taxonomy)
+# Generated from files:
+#  content_taxonomy.module,v 1.2.2.15.2.35 2010/02/06 11:40:27 mh86
+#  content_taxonomy_autocomplete.module,v 1.2.2.4.2.17 2009/08/19 09:42:30 mh86
+#  content_taxonomy_tree.module,v 1.1.2.5 2009/05/14 16:58:22 mh86
+#  content_taxonomy_options.module,v 1.1.4.7.2.4 2008/12/27 11:25:27 mh86
+#  content_taxonomy.info,v 1.1.2.2.2.1 2008/04/30 08:05:19 mh86
+#  content_taxonomy_autocomplete.info,v 1.1.2.4.2.1 2008/04/30 08:05:19 mh86
+#  content_taxonomy_options.info,v 1.1.2.5.2.1 2008/04/30 08:05:19 mh86
+#  content_taxonomy_tree.info,v 1.1.2.1 2008/04/30 08:05:19 mh86
+#  includes/content_taxonomy.token.inc: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Content Taxonomy 6.x\n"
+"POT-Creation-Date: 2010-04-07 17:51+0200\n"
+"PO-Revision-Date: 2010-04-07 19:46+0100\n"
+"Last-Translator: Magnus Gunnarsson <magnus.gunnarsson76@gmail.com>\n"
+"Language-Team: drupalsverige.se\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"X-Poedit-Language: Swedish\n"
+"X-Poedit-Country: SWEDEN\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: content_taxonomy.module:16
+msgid "Defines a CCK field type for referencing taxonomy terms. The fields are independent from vocabulary settings and can be configured through the CCK admin field pages. The Content Taxonomy Module provides different widget types, at the moment including Option Widgets (Radios / Checkboxes, Selects), Autocompletes, Tree). The widget modules have to be enabled separately."
+msgstr "Anger en fälttyp åt CCK för att hänvisa taxonomitermer. Fälten är oberoende från inställningar i vokabulär och kan konfigureras genom administrationssidorna för fält i CCK. Modulen Content Taxonomy tillhandahåller olika typer av gränssnittskomponenter. För närvarande ingår gränssnittskomponenten alternativ (radioknapar/kryssrutor, rullgardinsmeny, automatiskt kompletterande och trädstruktur). Modulerna för gränssnittskomponenterna måste aktiveras var för sig."
+
+#: content_taxonomy.module:49
+msgid "Content Taxonomy Fields"
+msgstr "Fält för Content Taxonomy"
+
+#: content_taxonomy.module:50
+msgid "Stores terms for nodes in the database."
+msgstr "Lagrar termer för noder i databasen."
+
+#: content_taxonomy.module:69
+msgid "Save values additionally to the core taxonomy system (into the 'term_node' table)."
+msgstr "Lagrar värden som tillägg till kärnans taxonomisystem (till tabellen \"term_node\")."
+
+#: content_taxonomy.module:71
+msgid "If this option is set, saving of terms is additionally handled by the taxonomy module. So saved terms from Content Taxonomy fields will appear as any other terms saved by the core taxonomy module. Set this option if you are using any other taxonomy application, like tagadelic. Otherwise terms are only saved in the cck tables and can only be accessed via the node or a view"
+msgstr "Om detta alternativ är angivet så kommer lagring av termer att handhas även av modulen Taxonomy. Därför kommer sparade termer från fält i Content Taxonomy att visas som vilken term som helst som sparats av kärnans modul för taxonomi. Ange detta alternativ om du använder andra applikationer för taxonomi såsom Tagadelic. Annars kommer termer enbart att sparas i CCK:s tabeller och kan enbart nås via noden eller en vy."
+
+#: content_taxonomy.module:81
+msgid "Vocabulary"
+msgstr "Vokabulär"
+
+#: content_taxonomy.module:85
+msgid "Terms of the selected vocabulary get exposed to the field"
+msgstr "Termer för det valda vokabuläret kommer att synas för fältet."
+
+#: content_taxonomy.module:90
+msgid "Advanced settings for hierarchical vocabularies"
+msgstr "Utökade inställningar för hierarkiska vokabulär"
+
+#: content_taxonomy.module:95
+msgid "Parent Term"
+msgstr "Överliggande term"
+
+#: content_taxonomy.module:99
+msgid "If any term is selected here, only child terms of the selected are going to be exposed the field. Otherwise the whole vocabulary selected above"
+msgstr "Om en term är vald här så kommer enbart underliggande termer av de valda att vara visade fält. Annars visas hela vokabuläret som är valt ovan."
+
+#: content_taxonomy.module:103
+msgid "Advanced PHP code"
+msgstr "Avancerad PHP-kod"
+
+#: content_taxonomy.module:108
+msgid "PHP Code for selecting the parent term"
+msgstr "PHP-kod för att välja överliggande term"
+
+#: content_taxonomy.module:112
+msgid "Advanced usage only: PHP code that returns the parent term ID. Should not include &lt;?php ?&gt; delimiters. If this field is filled out, the ID returned by this code will override the selected parent above."
+msgstr "Enbart avancerat användande: PHP-kod som returnerar den överliggande termens ID. Får inte innehålla avgränsarna &lt;?php ?&gt;. Om detta fält är ifyllt så kommer ID-numret som returneras av denna kod att åsidosätta den valda föräldern ovan."
+
+#: content_taxonomy.module:117
+msgid "Depth of taxonomy tree"
+msgstr "Djup för taxonomins trädstruktur"
+
+#: content_taxonomy.module:119
+msgid "By setting a numeric value, the depth of the hierarchy shown can be limited. Leave this field blank to show the whole hierarchy."
+msgstr "Genom att ange ett numeriskt värde så kan djupet för visningen av en hierarki att begränsas. Lämna detta tomt för att visa hela hierarkin."
+
+#: content_taxonomy.module:142
+msgid "@field-title term"
+msgstr "Term @field-title"
+
+#: content_taxonomy.module:205
+msgid "As Text"
+msgstr "Som text"
+
+#: content_taxonomy.module:210
+msgid "As Link"
+msgstr "Som länk"
+
+#: content_taxonomy.module:336
+msgid "Preview"
+msgstr "Förhandsgranska"
+
+#: content_taxonomy.module:388;401
+msgid "content"
+msgstr "innehåll"
+
+#: content_taxonomy.module:388
+msgid "Deleted field %field_name and its data."
+msgstr "Raderade fält %field_name och dess data."
+
+#: content_taxonomy.module:401
+msgid "Entries with term id = %tid have been deleted out of %table for field %field_name."
+msgstr "Inlägg med ID för term = %tid har raderats från %table för fält %field_name."
+
+#: content_taxonomy_autocomplete.module:40
+msgid "Autocomplete (Freetagging)"
+msgstr "Automatiskt kompletterande (fri märkning)"
+
+#: content_taxonomy_autocomplete.module:59
+msgid "Settings for Autocompletes"
+msgstr "Inställningar för automatisk kompletterande"
+
+#: content_taxonomy_autocomplete.module:65
+msgid "Freetagging settings"
+msgstr "Inställningar för fri märkning"
+
+#: content_taxonomy_autocomplete.module:67
+msgid "Allow and insert new terms by the user into the vocabulary"
+msgstr "Tillåt och infoga nya termer av användaren till vokabuläret."
+
+#: content_taxonomy_autocomplete.module:68
+msgid "Deny any new terms"
+msgstr "Godkänn inte nya termer."
+
+#: content_taxonomy_autocomplete.module:73
+msgid "Extra Parent for new terms"
+msgstr "Extra överliggande för nya termer."
+
+#: content_taxonomy_autocomplete.module:76
+msgid "This setting is only relevant if you have selected \"Allow and insert new terms by the user into the vocabulary\". If you select any term here, new terms will get children of the selected one, otherwise new terms get children of the parent term (root, if no parent selected) selected in the global settings."
+msgstr "Denna inställning är enbart relevant om du har valt \"Tillåt och infoga nya termer av användaren till vokabuläret\". Om du väljer en term här kommer nya termer att bli underliggande till de valda en. Annars kommer nya termer bli underliggande till den överliggande termen (root, om ingen överliggande är vald) som väljs i de globala inställningarna."
+
+#: content_taxonomy_autocomplete.module:81
+msgid "Maximum length of autocomplete"
+msgstr "Största längd på automatiskt kompletterande."
+
+#: content_taxonomy_autocomplete.module:85
+msgid "Defines how many characters can be typed into the autocomplete field. For values higher than 255, remember that one term name can not be longer than 255 (would be cutted), nevertheless it's not a problem for multiple values, separated by commas."
+msgstr "Anger hur många tecken som kan skrivas in i det automatiskt kompletterande fältet. Kom ihåg att ett namn på term inte kan vara längre än 255 tecken ( de kommer i sådana fall att kapas av). Däremot är det inte ett problem för flera värden åtskilda med kommatecken."
+
+#: content_taxonomy_autocomplete.module:90
+msgid "Use Active Tags style widget"
+msgstr "Använd stilen från Active Tags gränssnittskomponent."
+
+#: content_taxonomy_autocomplete.module:92
+msgid "Use the Active Tags module to improve the usability of this autocomplete widget."
+msgstr "Använd modulen Active Tags för att förbättra användbarheten för denna automatiskt kompletterande gränssnittskomponent."
+
+#: content_taxonomy_autocomplete.module:105
+msgid "\"Maximum length\" must be a positive integer."
+msgstr "\"Största längd\" måste vara ett positivt heltal."
+
+#: content_taxonomy_autocomplete.module:225
+msgid "You can provide only one value"
+msgstr "Du kan lägga till enbart ett värde."
+
+#: content_taxonomy_autocomplete.module:229
+#: content_taxonomy_tree.module:157
+msgid "%name: this field cannot hold more than @count values."
+msgstr "%name: detta fält kan inte innehålla fler än @count värden."
+
+#: content_taxonomy_autocomplete.module:233
+msgid "New tags are not allowed"
+msgstr "Nya märken är inte tillåtna"
+
+#: content_taxonomy_autocomplete.module:26
+msgid "Autocomplete"
+msgstr "Automatiskt kompletterande"
+
+#: content_taxonomy_options.module:27
+msgid "Checkboxes/Radios"
+msgstr "Kryssrutor/Radioknappar"
+
+#: content_taxonomy_options.module:35
+msgid "Select List"
+msgstr "Rullgardinsmeny"
+
+#: content_taxonomy_options.module:54
+msgid "Settings for Options"
+msgstr "Inställningar för alternativ"
+
+#: content_taxonomy_options.module:60
+msgid "Indent child terms with ' - ' signs"
+msgstr "Drag in underliggande termer med tecknet \"-\"."
+
+#: content_taxonomy_options.module:62
+msgid "If this option is checked, a hierarchy gets visualized by indenting child terms, otherwise it's a flat list"
+msgstr "Om detta alternativ är ikryssat så kommer en hierarki att synas genom att göra indrag för underliggande termer. Annars kommer det att vara en rak lista."
+
+#: content_taxonomy_options.module:65
+msgid "Parent term for OptGroups in select fields"
+msgstr "Överliggande term för OptGroups i valfält"
+
+#: content_taxonomy_options.module:69
+msgid "This settings applies only for select fields. Select a parent term containg the grouping terms. Grouping terms should be parents of the selected terms (from the Global Settings)."
+msgstr "Denna inställning gäller enbart för valfält. Välj en överliggande term som innehåller grupperande termer. Grupperande termer måste ligga över de valda termerna (Från de globala inställningarna)"
+
+#: content_taxonomy_options.module:95
+msgid "N/A"
+msgstr "Ej tillgänglig"
+
+#: content_taxonomy_options.module:97
+msgid "- None -"
+msgstr "- Ingen -"
+
+#: content_taxonomy_tree.module:24
+msgid "Tree"
+msgstr "Träd"
+
+#: content_taxonomy_tree.module:43
+msgid "Settings for Trees"
+msgstr "Inställningar för trädstruktur"
+
+#: content_taxonomy_tree.module:49
+msgid "Expand whole tree by default"
+msgstr "Fäll ut hela trädstrukturen som standard."
+
+#: content_taxonomy_tree.module:51
+msgid "Otherwise only branches, where a term is selected get expanded by default"
+msgstr "Annars enbart grenar, där en term som väljs fälls ut som standard."
+
+#: content_taxonomy_tree.module:154
+msgid "!name field is required."
+msgstr "Fältet !name är obligatoriskt."
+
+#: content_taxonomy.info:0
+msgid "Content Taxonomy"
+msgstr "Content Taxonomy"
+
+#: content_taxonomy.info:0
+msgid "Defines a field type for taxonomy terms"
+msgstr "Definierar en fälttyp för taxonomitermer"
+
+#: content_taxonomy.info:0
+#: content_taxonomy_autocomplete.info:0
+#: content_taxonomy_options.info:0
+#: content_taxonomy_tree.info:0
+msgid "CCK"
+msgstr "CCK"
+
+#: content_taxonomy_autocomplete.info:0
+msgid "Content Taxonomy Autocomplete"
+msgstr "Automatiskt komplettering för Content Taxonomy"
+
+#: content_taxonomy_autocomplete.info:0
+msgid "Defines a autocomplete widget type for content_taxonomy"
+msgstr "Definierar en gränssnittskomponent för automatisk komplettering åt Content Taxonomy."
+
+#: content_taxonomy_options.info:0
+msgid "Content Taxonomy Options"
+msgstr "Alternativ för Content Taxonomy"
+
+#: content_taxonomy_options.info:0
+msgid "Defines a option widget type for content_taxonomy for selects, radios/checkboxes"
+msgstr "Definierar en gränssnittskomponent för alternativ åt Content Taxonomy för rullgardinsmenyer, radio/kryssknappar."
+
+#: content_taxonomy_tree.info:0
+msgid "Content Taxonomy Tree"
+msgstr "Trädstruktur för Content Taxonomy"
+
+#: content_taxonomy_tree.info:0
+msgid "Defines a dynamic tree widget for Content Taxonomy"
+msgstr "Definierar en dynamisk gränssnittskomponent för trädstruktur åt Content Taxonomy."
+
+#: includes/content_taxonomy.token.inc:10
+msgid "Name of top taxonomy term"
+msgstr "Namnet på nodens översta taxonomiterm"
+
+#: includes/content_taxonomy.token.inc:11
+msgid "Unfiltered name of top taxonomy term. WARNING - raw user input."
+msgstr "Ofiltrerat namn på nodens översta taxonomiterm. VARNING - obearbetad inmatning från användare."
+
+#: includes/content_taxonomy.token.inc:12
+msgid "ID of top taxonomy term"
+msgstr "ID för nodens översta taxonomiterm"
+
+#: includes/content_taxonomy.token.inc:13
+msgid "Names of all taxonomy terms separated by commas"
+msgstr "Namn för alla taxonomitermer separerade med komman"
+
+#: includes/content_taxonomy.token.inc:14
+msgid "Unfiltered names of all taxonomy terms separated by commas. WARNING - raw user input."
+msgstr "Ofiltrerade namn för alla taxonomitermer separerade med komman. Varning - obearbetad inmatning av användare."
+
+#: includes/content_taxonomy.token.inc:15
+msgid "IDs of all taxonomy terms separated by commas"
+msgstr "ID-nummer för alla taxonomitermer separerade med komman"
+
+#: includes/content_taxonomy.token.inc:16
+msgid "Name of terms vocabulary"
+msgstr "Namn för vokabulär till term"
+
+#: includes/content_taxonomy.token.inc:17
+msgid "ID of terms vocabulary"
+msgstr "ID för vokabulär till term"
+

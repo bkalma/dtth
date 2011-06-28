@@ -1,0 +1,39 @@
+<?php
+// $Id: twitter_avatar.module,v 1.1.2.6 2010/04/15 03:14:45 walkah Exp $
+
+/**
+ * 
+ */
+function twitter_avatar_preprocess_user_picture(&$variables) {
+  $variables['picture'] = '';
+  
+  if (variable_get('user_pictures', 0)) {
+	$pic_url = '';  
+    $account = $variables['account'];
+    $twitter_fdb = db_result(db_query("SELECT profile_image_url FROM {twitter_account} WHERE uid= %d", $account->uid));
+	if (eregi("_normal.jpg$", $twitter_fdb)) { $pic_url = ereg_replace("_normal.jpg$","_bigger.jpg",$twitter_fdb); }
+	elseif (eregi("_normal.JPG$", $twitter_fdb)) { $pic_url = ereg_replace("_normal.jpg$","_bigger.jpg",$twitter_fdb); }
+	elseif (eregi("_normal.png$", $twitter_fdb)) { $pic_url = ereg_replace("_normal.png$","_bigger.png",$twitter_fdb); }
+	elseif (eregi("_normal.PNG$", $twitter_fdb)) { $pic_url = ereg_replace("_normal.PNG$","_bigger.PNG",$twitter_fdb); }
+	elseif (eregi("_normal.gif$", $twitter_fdb)) { $pic_url = ereg_replace("_normal.gif$","_bigger.gif",$twitter_fdb); }
+	else { $pic_url = ereg_replace("_normal.GIF$","_bigger.GIF",$twitter_fdb); }
+    if (!empty($account->name) && !empty($pic_url)) {
+      $picture = $pic_url;
+    }  elseif (!empty($account->picture) && file_exists($account->picture)) {
+      $picture = file_create_url($account->picture);
+    }
+    elseif (variable_get('user_picture_default', '')) {
+      $picture = variable_get('user_picture_default', '');
+    } 
+
+    if (isset($picture)) {
+      $alt = t("@user's picture", array('@user' => $account->name ? $account->name : variable_get('anonymous', t('Anonymous'))));
+      $variables['picture'] = theme('image', $picture, $alt, $alt, '', FALSE);
+      if (!empty($account->uid) && user_access('access user profiles')) {
+        $attributes = array('attributes' => array('title' => t('View user profile.')), 'html' => TRUE);
+        $variables['picture'] = l($variables['picture'], "user/$account->uid", $attributes);
+      }
+    }
+  }
+}
+?>

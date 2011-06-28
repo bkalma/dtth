@@ -1,0 +1,79 @@
+<?php
+
+function dtth_upload2_page() {
+  global $user;
+  
+  $js = TRUE;      
+  ctools_include('node.pages', 'node', '');
+  //include_once(drupal_get_path('module','node') . '/node.pages.inc');
+  $GLOBALS['dtth_upload_page'] = TRUE;
+  $node = new stdClass();
+  $node->type = 'dog';  
+  $node->uid = $user->uid;
+  $node->name = $user->name;
+  $node->comment = 2;  
+  $title = 'hello';   
+  if ($js) {
+    //ctools_modal_render($title, $content);
+    $form_id = 'dtth_upload_form';
+    $form_state = array(
+      'title' => t('Login'),
+      'ajax' => TRUE,
+      'args' => array($node),
+    );
+                      
+    $content = ctools_modal_form_wrapper($form_id, $form_state);        
+    if (empty($content)) {          
+      // empty $output signifies success, so we'll use it as our $commands
+      // array.
+      $redirect = explode("/", $form_state['redirect']);
+      $nid = $redirect[1];
+      $content = array();
+      $content[] = ctools_modal_command_loading();
+      //$content[] = ctools_ajax_command_redirect($form_state['redirect']);
+      $node = node_load($nid);
+      $title = $node->title;
+      $output = node_view($node, FALSE, FALSE);
+      $content[] = ctools_modal_command_display($title, $output);
+      $content[] = ctools_ajax_command_css('#modalContent .pre_post_box_action .fb', array('position' => 'relative'));
+      //$content[] = ctools_ajax_command_eval('$(\'#modalContent .node_'.$node->nid.' a.fb\').attr(\'title\',\'Share on Facebook or Twitter\').tooltip({api: true}).show();');
+      //$content[] = ctools_ajax_command_eval('$(\'#modalContent .node_'.$node->nid.' a.fb\').attr(\'title\',\'Share on Facebook or Twitter\');');
+      /*$content[] = ctools_ajax_command_append('#modalContent .pre_post_box_action .fb', '<div class="ballon" style="position: absolute; left: -80px;">
+<div class="ballon_inner">Congrats! Your best friend is on the path to fame! With a little help from Facebook and Twitter fame could be even closer than you think!</div></div>');*/      
+    }
+    ctools_ajax_render($content);
+  } else {
+    $content = drupal_get_form($node->type . '_node_form', $node);
+    modalframe_child_js();
+    return $content;
+  }
+}
+
+
+function dtth_upload_form($form_state) {
+  if ($form_state['storage']['step']) {
+     $form_state['storage']['step'] = 1;
+  }
+  $step = $form_state['storage']['step'];
+  switch ($step) {
+    case 1:
+      $form['title'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Title'),
+      );
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Submit'),
+      );
+    break;    
+    case 2:
+    
+    break;
+  }
+  
+  return $form;
+}
+
+function dtth_upload_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+}

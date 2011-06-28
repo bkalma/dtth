@@ -1,0 +1,107 @@
+/* $Id$ */
+
+#appbar_container {
+  bottom: 0;
+  display: none;
+  font-size: 11px;
+  height: 25px;
+  padding: 0;
+  position: fixed;
+  right: 0;
+  width: 100%;
+  z-index: 99;
+}
+
+#appbar_sub {
+  display: block;
+  margin-left: 15px;
+  margin-right: 15px;
+  overflow: visible !important;
+  position: relative;
+}
+
+#appbar {
+  background-color: #E5E5E5;
+  border: 1px #B5B5B5 solid;
+  border-bottom: none;
+  display: block;
+  height: 25px;
+  padding: 0;
+  right: 0;
+}
+
+#appbar_messages,
+#appbar_im {
+  border-left: 1px #B5B5B5 solid;
+  float: right;
+  height: 25px;
+}
+
+#appbar_alerts {
+  cursor: pointer;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+#appbar_alerts_list {
+  background-color: #FFFFFF;
+  border: 1px #B5B5B5 solid;
+  bottom: 26px;
+  display: none;
+  margin-bottom: -1px; /* Hide the bottom border. */
+  max-height: 450px;
+  min-height: 249px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  width: 200px;
+  z-index: 50;
+}
+
+#appbar_items {
+  border-right: 1px #B5B5B5 solid;
+  float: left;
+  height: 25px;
+}
+
+.appbar_alert {
+  border-bottom: 1px #B5B5B5 solid;
+  padding: 0.5em;
+}
+
+.appbar-alert-first {
+}
+
+.appbar-alert-last {
+  border-bottom: 0 none;
+}
+
+.appbar-new {
+  background-color: #FFFFCF;
+}
+
+.appbar_time {
+  font-size: 10px;
+  font-style: italic;
+  padding-left: 0.5em;
+}
+
+.appbar-item {
+  border-right: 1px #B5B5B5 solid;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+.appbar-item-last {
+  border-right: 0 none;
+}
+
+/** Style the alerts section differently if there are new alerts. **/
+.appbar-has-new {
+}
+
+/** Style the page differently if the Appbar is being shown. **/
+.with-appbar {
+}

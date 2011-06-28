@@ -1,0 +1,13 @@
+; $Id: ss2.info,v 1.5 2007/07/01 23:27:32 goba Exp $
+name = SkyShi II
+description = Tableless, recolorable, multi-column, fluid width theme (default).
+version = VERSION
+core = 6.x
+engine = phptemplate
+stylesheets[all][] = style.css
+
+regions[left] = Left sidebar
+regions[portofolio] = Portofolio
+regions[content] = Content
+regions[header] = Header
+regions[footer] = Footer

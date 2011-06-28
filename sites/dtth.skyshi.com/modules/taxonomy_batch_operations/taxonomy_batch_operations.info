@@ -1,0 +1,6 @@
+; $Id: taxonomy_batch_operations.info,v 1.1 2007/02/13 16:51:01 drawk Exp $
+name = "Taxonomy Batch Operations"
+description = "Import, edit and remove multiple taxonomy terms at once."
+core = 6.x
+dependencies[] = taxonomy
+package = 'Taxonomy'

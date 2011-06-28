@@ -1,0 +1,1593 @@
+<?php
+// $Id: taxonomy_batch_operations.module,v 1.1.4.3 2008/02/07 23:04:08 tbarregren Exp $
+
+/**
+ * taxonomy_batch_operations module for Drupal
+ *
+ * Copyright (c) 2007 William Smith
+ * Copyright (c) 2008 Thomas Barregren & Takafumi
+ * Copyright (c) 2009 Daniel Berthereau <daniel.drupal@berthereau.net>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+/**
+ * @file
+ * Import, edit and remove multiple taxonomy terms at once.
+ *
+ * This module allows users with the 'administer taxonomy' permission to perform
+ * batch (bulk) operations on taxonomy terms. It aims to reduce the amount of
+ * time required to add, delete, or edit large groups of taxonomy terms.
+ */
+
+
+/**
+ * Implementation of hook_help().
+ */
+function taxonomy_batch_operations_help($path, $arg) {
+  switch ($path) {
+    case 'admin/content/taxonomy/%/terms':
+      $output = t('Use this form in order to do some works with multiple terms.');
+      return $output;
+
+    case 'admin/content/taxonomy/%/add/terms':
+      $output = t('Use this form in order to create a set of terms.');
+      return $output;
+
+    case 'admin/help#taxonomy_batch_operations':
+      $output = '<br />'. t('Use <em>Taxonomy batch operations</em> to import, edit or remove a taxonomy or a list of terms.<br /><br />
+      You can access module when you edit a vocabulary or add terms at <a href="!vocabulary_link">Administer > Content > Taxonomy</a> or directly with urls:<br />
+      admin/content/taxonomy/delete/term/tid<br />
+      admin/content/taxonomy/delete/terms/tid_1,tid_2,...,tid_n<br />
+      admin/content/taxonomy/<em>vocabulary_id</em>/terms<br />
+      admin/content/taxonomy/<em>vocabulary_id</em>/add/terms.<br /><br />
+      Notice: Currently, when adding multiple terms, they are never updated, but, if any, duplicates are created.', array('!vocabulary_link' => url('admin/content/taxonomy/')));
+      return $output;
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ *
+ * Two tabs:
+ * - one to quick modify or remove terms;
+ * - one to quick add terms with a text area.
+ *
+ */
+function taxonomy_batch_operations_menu() {
+  $items = array();
+
+  $items['admin/content/taxonomy/delete/term'] = array(
+    'title' => 'Delete term',
+    'page callback' => 'taxonomy_batch_operations_delete_term',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/content/taxonomy/occurances/term'] = array(
+    'title' => 'Associate term',
+    'page callback' => 'taxonomy_batch_operations_occurances_term',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/content/taxonomy/delete/terms'] = array(
+    'title' => 'Delete terms',
+    'page callback' => 'taxonomy_batch_operations_delete_multiple_terms',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['admin/content/taxonomy/publish/term'] = array(
+    'title' => 'Delete term',
+    'page callback' => 'taxonomy_batch_operations_publish_terms',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['admin/content/taxonomy/unpublish/term'] = array(
+    'title' => 'Delete term',
+    'page callback' => 'taxonomy_batch_operations_unpublish_terms',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['admin/content/taxonomy/publish/terms'] = array(
+    'title' => 'Delete terms',
+    'page callback' => 'taxonomy_batch_operations_publish_terms',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['admin/content/taxonomy/unpublish/terms'] = array(
+    'title' => 'Delete terms',
+    'page callback' => 'taxonomy_batch_operations_unpublish_terms',
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_CALLBACK,
+  );
+
+  // New tab in order to keep Drupal 6.x taxonomy list before merging in a next release.
+  $items['admin/content/taxonomy/%taxonomy_vocabulary/terms'] = array(
+    'title' => 'Edit multiple terms',
+    'page callback' => 'taxonomy_batch_operations_overview_terms',
+    'page arguments' => array(3),
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_LOCAL_TASK,
+    'parent' => 'admin/content/taxonomy/%taxonomy_vocabulary',
+    'weight' => 2,
+  );
+
+  $items['admin/content/taxonomy/%taxonomy_vocabulary/add/terms'] = array(
+    'title' => 'Add multiple terms',
+    'page callback' => 'taxonomy_batch_operations_add_multiple_terms',
+    'page arguments' => array(3),
+    'access arguments' => array('administer taxonomy'),
+    'type' => MENU_LOCAL_TASK,
+    'parent' => 'admin/content/taxonomy/%taxonomy_vocabulary',
+    'weight' => 5,
+   );
+
+  return $items;
+}
+
+/**
+ * Form builder for the taxonomy batch operations terms overview.
+ *
+ * Display a tree of all terms in a vocabulary, with options to edit each one.
+ */
+function taxonomy_batch_operations_overview_terms($vocabulary) {
+  global $pager_page_array, $pager_total;
+
+  $form['multiedit'] = array('#tree' => TRUE);
+
+  $destination = drupal_get_destination();
+
+  drupal_set_title('Edit terms in <em>'. check_plain($vocabulary->name) .'</em>');
+  $start_from      = isset($_GET['page']) ? $_GET['page'] : 0;
+  $total_entries   = 0;  // total count for pager
+  $page_increment  = variable_get('taxonomy_terms_per_page_admin', 100); // number of terms per page
+  $displayed_count = 0;  // number of terms shown
+
+  $tree = taxonomy_get_tree($vocabulary->vid);
+
+  if (count($tree) > 0) {
+  /* sort */
+    switch ($_REQUEST['order']) {
+      case t('Name'):
+        //$tree = array_reverse($tree, FALSE);
+        foreach ($tree as $key => $srow) {
+          $name[$key] =  drupal_strtolower($srow->name);
+        }
+        if ($_REQUEST['sort'] == 'asc')
+          array_multisort($name, SORT_ASC, $tree);
+        else
+        if ($_REQUEST['sort'] == 'desc')
+          array_multisort($name, SORT_DESC, $tree);
+        break;
+      case t('Status'):
+        foreach ($tree as $key => $srow) {
+          $count[$key] = db_result(db_query("SELECT status FROM {term_data} WHERE tid=%d", $srow->tid));
+          $name[$key] = drupal_strtolower($srow->name);
+        }
+        if ($_REQUEST['sort'] == 'asc')
+          array_multisort($count, SORT_ASC, $name, SORT_ASC, $tree);
+        else
+        if ($_REQUEST['sort'] == 'desc')
+          array_multisort($count, SORT_DESC, $name, SORT_ASC, $tree);
+      break;
+      case t('Occurances'):
+        foreach ($tree as $key => $srow) {
+          $count[$key] = taxonomy_batch_operations_term_count_nodes($srow->tid);
+          $name[$key] = drupal_strtolower($srow->name);
+        }
+        if ($_REQUEST['sort'] == 'asc')
+          array_multisort($count, SORT_ASC, $name, SORT_ASC, $tree);
+        else
+        if ($_REQUEST['sort'] == 'desc')
+          array_multisort($count, SORT_DESC, $name, SORT_ASC, $tree);
+        break;
+
+      case t('Weight'):
+        foreach ($tree as $key => $srow) {
+          $count[$key] = $srow->weight;
+          $name[$key] = drupal_strtolower($srow->name);
+        }
+        if ($_REQUEST['sort'] == 'asc')
+          array_multisort($count, SORT_ASC, $name, SORT_ASC, $tree);
+        else
+        if ($_REQUEST['sort'] == 'desc')
+          array_multisort($count, SORT_DESC, $name, SORT_ASC, $tree);
+        break;
+    }
+
+    foreach ($tree as $term) {
+      $total_entries++; // we're counting all-totals, not displayed
+      if (($start_from && ($start_from * $page_increment) >= $total_entries) || ($displayed_count == $page_increment)) {
+        continue;
+      }
+
+      $form['multiedit'][$term->tid]['name'] = array(
+        '#value' => str_repeat('--', $term->depth) .' '. l($term->name, "taxonomy/term/$term->tid", array('attributes' => array('title' => $term->description))),
+      );
+      $form['multiedit'][$term->tid]['count'] = array(
+        '#value' => taxonomy_batch_operations_term_count_nodes($term->tid),
+      );
+      $form['multiedit'][$term->tid]['status'] = array(        
+        '#value' => db_result(db_query("SELECT status FROM {term_data} WHERE tid=%d", $term->tid)),
+      );
+      $form['multiedit'][$term->tid]['weight'] = array(
+        '#type' => 'weight',
+        '#default_value' => $term->weight,
+      );
+      $form['multiedit'][$term->tid]['operations'] = array(
+        '#value' => l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array('query' => $destination))
+            .' | '. l(t('delete'), "admin/content/taxonomy/delete/term/$term->tid", array('query' => $destination))
+            .' | '. l(t('associate'), "admin/content/taxonomy/occurances/term/$term->tid", array('query' => $destination)),
+      );
+      $form['multiedit'][$term->tid]['check'] = array(
+        '#type' => 'checkbox',
+        '#default_value' => 0,
+      );
+
+      $displayed_count++; // we're counting tids displayed
+    }    
+
+    $form['save'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save weights'),
+    );
+    $form['delete'] = array(
+      '#type' => 'submit',
+      '#value' => t('Delete selected terms'),
+      '#submit' => array('taxonomy_batch_operations_form_delete'),
+    );
+    $form['publish'] = array(
+      '#type' => 'submit',
+      '#value' => t('Publish selected terms'),
+      '#submit' => array('taxonomy_batch_operations_form_publish'),
+    );
+    $form['unpublish'] = array(
+      '#type' => 'submit',
+      '#value' => t('Unpublish selected terms'),
+      '#submit' => array('taxonomy_batch_operations_form_unpublish'),
+    );
+  }
+  else {
+    // if the vocab is empty, we stuff the 'no terms available' text into where the pager would go
+    $form['pager'] = array(
+      '#value' => t('No terms available.'),
+    );
+  }
+
+  $pager_page_array[0] = $start_from;
+  $pager_total[0] = intval($total_entries / $page_increment) + 1;
+
+  if ($total_entries >= $page_increment) {
+    //$rows[] = array(array('data' => theme('pager', NULL, $page_increment), 'colspan' => '2'));
+    $form['pager'] = array(
+      '#type' => 'markup',
+      '#value' => theme('pager', NULL, $page_increment),
+    );
+  }
+
+  return drupal_get_form('taxonomy_batch_operations_form', $form);
+}
+
+/**
+ * Implementation of hook_form()
+ */
+function taxonomy_batch_operations_form(&$form_state, $record) {
+  return ($record);
+}
+
+/**
+ * Implementation of hook_theme()
+ *
+ * @return array
+ */
+function taxonomy_batch_operations_theme() {
+  return array(
+    'taxonomy_batch_operations_form' => array(
+      'file' => 'taxonomy_batch_operations.module',
+      'arguments' => array('form' => NULL),
+    ),
+    'taxonomy_batch_operations_occurances_term_form' => array(
+      'arguments' => array('form' => NULL),
+    ),        
+  );
+}
+
+function theme_taxonomy_batch_operations_form($form) {
+  $header = array(
+    array(
+      'data' => t('Name'),
+      'sort' => '',
+      'field' => '',
+    ),
+    array(
+      'data' => t('Occurances'),
+      'sort' => '',
+      'field' => '',
+    ),
+    array(
+      'data' => t('Status'),
+      'sort' => '',
+      'field' => '',
+    ),
+    array(
+      'data' => t('Weight'),
+      'sort' => 'asc',
+      'field' => '',
+    ),
+    t('Operations'),
+    theme('table_select_header_cell'),
+  );
+
+  foreach (element_children($form['multiedit']) as $i) {
+    $rows[] = array(
+      drupal_render($form['multiedit'][$i]['name']),
+      drupal_render($form['multiedit'][$i]['count']),
+      drupal_render($form['multiedit'][$i]['status']),
+      drupal_render($form['multiedit'][$i]['weight']),
+      drupal_render($form['multiedit'][$i]['operations']),
+      drupal_render($form['multiedit'][$i]['check'])
+    );
+  }
+
+  $rows[] = array(
+    array('data' => ''),    
+    array('data' => drupal_render($form['save']), 'colspan' => 1),
+    array('data' => drupal_render($form['delete']), 'colspan' => 1),
+    array('data' => drupal_render($form['publish']), 'colspan' => 1),
+    array('data' => drupal_render($form['unpublish']), 'colspan' => 2),
+  );
+  $rows[] = array(
+    array('data' => drupal_render($form['pager']), 'colspan' => 6),
+  );
+
+  $output = theme_table($header, $rows, array('id' => 'taxonomy'));
+  $output .= drupal_render($form);
+
+  return $output;
+}
+
+function taxonomy_batch_operations_delete_term($tid = '') {
+  return drupal_get_form('taxonomy_batch_operations_delete_terms_confirm_form', $tid);
+}
+
+function taxonomy_batch_operations_delete_multiple_terms($tids = '') {
+    return drupal_get_form('taxonomy_batch_operations_delete_terms_confirm_form', $tids);
+}
+
+function taxonomy_batch_operations_delete_terms_confirm_form(&$form_state, $tids) {
+  $tids = explode(",", $tids);
+
+  $list_deleted_terms = array();
+
+  foreach ($tids as $tid) {
+    $term = taxonomy_get_term($tid);
+
+    $form['type'][$tid] = array('#type' => 'value', '#value' => 'term');
+    $form['name'][$tid] = array('#type' => 'value', '#value' => $term->name);
+    $form['tid'][$tid] = array('#type' => 'value', '#value' => $tid);
+
+    $list_deleted_terms[] = $term->name;
+  }
+
+  $count_deleted = count($list_deleted_terms);
+
+  return confirm_form($form,
+    t('Are you sure you want to delete the %count_deleted?', array('%count_deleted' => format_plural($count_deleted, 'selected term', '@count selected terms'))),
+    (isset($_GET['destination'])) ? $_GET['destination'] : 'admin/content/taxonomy',
+    '<br />'. t('Deleting a term will delete hierarchy of its children if there are any. This action <strong>cannot</strong> be undone') .'<br /><br />'.
+    t('%selected "%list_deleted_terms" (possible children are not shown).',
+      array(
+       '%selected' => format_plural($count_deleted, 'The selected term is', '@count terms are selected:'),
+       '%list_deleted_terms' => implode('", "', $list_deleted_terms)
+    )) .'<br /><br />',
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+function _taxonomy_batch_operations_del_term($tid) {
+  $tids = array($tid);
+  while ($tids) {
+    $children_tids = $orphans = array();
+    foreach ($tids as $tid) {      
+
+      $term = (array) taxonomy_get_term($tid);
+
+      db_query('DELETE FROM {term_data} WHERE tid = %d', $tid);
+      db_query('DELETE FROM {term_hierarchy} WHERE tid = %d', $tid);
+      db_query('DELETE FROM {term_relation} WHERE tid1 = %d OR tid2 = %d', $tid, $tid);
+      db_query('DELETE FROM {term_synonym} WHERE tid = %d', $tid);
+      db_query('DELETE FROM {term_node} WHERE tid = %d', $tid);
+      
+      // reset parents
+      db_query('UPDATE {term_hierarchy} SET parent = 0 WHERE parent = %d', $tid);      
+
+      module_invoke_all('taxonomy', 'delete', 'term', $term);
+    }        
+
+    $tids = $orphans;
+  }
+
+  cache_clear_all();
+
+  return SAVED_DELETED;
+}
+
+function taxonomy_batch_operations_delete_terms_confirm_form_submit($form, &$form_state) {
+  $list_non_existing_terms = array();
+  $list_deleted_terms = array();
+  foreach ($form_state['values'] as $key => $value) {
+    if (is_numeric($key)) {
+      if ($term = taxonomy_get_term($value)) {
+        $list_deleted_terms[] = $term->name;
+        _taxonomy_batch_operations_del_term($value);
+      }
+      else {
+        $list_non_existing_terms[] = $term->name;
+      }
+    }
+  }
+  $count_total = count($list_deleted_terms) + count($list_non_existing_terms);
+
+  $message = '';
+
+  if ($count_total == 0) {
+    $message .= t('No term was deleted.'). '<br />';
+  }
+  else {
+    if (count($list_non_existing_terms)) {
+      $message .= t(
+        '%count_total.<br />
+        %count_non_existing.<br />',
+        array(
+            '%count_total' => format_plural($count_total, 'One submitted term', '@count submitted terms.'),
+            '%count_non_existing' => format_plural(count($list_non_existing_terms), 'One non existing term', '@count non existing terms')
+        )
+      ) .'<br />';
+    }
+    if (count($list_deleted_terms)) {
+      $message .= t(
+        '%count_deleted:<br />
+        "%list_deleted_terms".<br />',
+        array(
+            '%count_deleted' => format_plural(count($list_deleted_terms), 'One deleted term', '@count deleted terms'),
+            '%list_deleted_terms' => implode('", "', $list_deleted_terms)
+        )
+      ) .'<br />';
+    }
+  }
+  drupal_set_message($message);
+
+  $form_state['redirect'] = (isset($_GET['destination'])) ? $_GET['destination'] : 'admin/content/taxonomy';
+}
+
+
+/**
+ * Handles taxonomy batch operations form validation.
+ */
+function taxonomy_batch_operations_form_validate($form, &$form_state) {
+}
+
+/**
+ * Handles taxonomy batch operations form submission.
+ */
+function taxonomy_batch_operations_form_submit($form, &$form_state) {
+  foreach ($form_state['values']['multiedit'] as $key => $tid) {
+    $term = taxonomy_get_term($key);
+    $parents = taxonomy_get_parents($key);
+    unset($tid['check']);
+    $tid['tid'] = $term->tid;
+    $tid['name'] = $term->name;
+    $tid['description'] = $term->description;
+    $tid['synonyms'] = $term->synonyms;
+    // weight is already set
+    $tid['vid'] = $term->vid;
+    $tid['parent'] = array_keys($parents);
+
+    taxonomy_save_term($tid);
+  }
+  drupal_set_message(t('Updated term weights.'));
+}
+
+/**
+ * Handles taxonomy batch operations form delete submission.
+ */
+function taxonomy_batch_operations_form_delete($form, &$form_state) {
+  $checked_tids = array();
+  foreach ($form_state['values']['multiedit'] as $key => $tid) {
+    if ($tid['check'] == 1) {
+      $checked_tids[] = $key;
+    }
+  }
+
+  $form_state['redirect'] = array('admin/content/taxonomy/delete/terms/'. implode(',', $checked_tids), drupal_get_destination());
+}
+
+function taxonomy_batch_operations_form_publish($form, &$form_state) {
+  $checked_tids = array();
+  foreach ($form_state['values']['multiedit'] as $key => $tid) {
+    if ($tid['check'] == 1) {
+      $checked_tids[] = $key;
+    }
+  }
+
+  $form_state['redirect'] = array('admin/content/taxonomy/publish/terms/'. implode(',', $checked_tids), drupal_get_destination());
+}
+
+function taxonomy_batch_operations_form_unpublish($form, &$form_state) {
+  $checked_tids = array();
+  foreach ($form_state['values']['multiedit'] as $key => $tid) {
+    if ($tid['check'] == 1) {
+      $checked_tids[] = $key;
+    }
+  }
+
+  $form_state['redirect'] = array('admin/content/taxonomy/unpublish/terms/'. implode(',', $checked_tids), drupal_get_destination());
+}
+
+
+
+//function taxonomy_batch_operations_form_alter(&$form, &$form_state, $form_id) {
+//}
+
+function taxonomy_batch_operations_add_multiple_terms($vocabulary = '') {
+  return (drupal_get_form('taxonomy_batch_operations_add_multiple_terms_form', $vocabulary));
+}
+
+function taxonomy_batch_operations_add_multiple_terms_form(&$form_state, $vocabulary) {
+  drupal_set_title('Add multiple terms to <em>'. check_plain($vocabulary->name) .'</em>');
+
+  if ($vocabulary->hierarchy) {
+    $parent = array_keys(taxonomy_get_parents(0));
+    $children = taxonomy_get_tree('', $vocabulary->vid);
+
+    // A term can't be the child of itself, nor of its children.
+    foreach ($children as $child) {
+      $exclude[] = $child->tid;
+    }
+    $exclude[] = $edit['tid'];
+
+    switch ($vocabulary->hierarchy) {
+      case 1:
+        $form['parent'] = _taxonomy_batch_operations_term_select(t('Parent'), 'parent', $parent, $vocabulary->vid, l(t('Parent term'), 'admin/help/taxonomy', array('fragment' => 'parent')) .'.', 0, '<'. t('root') .'>', $exclude);
+        break;
+
+      case 2:
+        $form['parent'] = _taxonomy_batch_operations_term_select(t('Parents'), 'parent', $parent, $vocabulary->vid, l(t('Parent terms'), 'admin/help/taxonomy', array('fragment' => 'parent')) .'.', 1, '<'. t('root') .'>', $exclude);
+        break;
+    }
+  }
+
+  $form['name'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Terms'),
+    '#rows' => 15, '#cols' => 64,
+    '#description' => t('The names of the terms, one term per line.'),
+    '#required' => TRUE,
+  );
+
+  $form['strip'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Strip text'),
+    '#description' => t('Remove leading or trailing text. Can be useful if cutting and pasting.  For example, if your terms are in the form " * item.", set prefix to " * " and suffix to "."'),
+  );
+  $form['strip']['prefix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Prefix'),
+    '#description' => t('Leading text to remove. Must match exactly.'),
+  );
+  $form['strip']['suffix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Suffix'),
+    '#description' => t('Trailing text to remove. Must match exactly.'),
+  );
+
+  $form['vid'] = array(
+    '#type' => 'value',
+    '#value' => $vocabulary->vid,
+  );
+  $form['vocabulary_name'] = array(
+    '#type' => 'value',
+    '#value' => $vocabulary->name,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add multiple terms'),
+  );
+
+  return $form;
+}
+
+function taxonomy_batch_operations_add_multiple_terms_form_submit($form, &$form_state) {
+  $message = '';
+  $terms = explode("\n", $form_state['values']['name']);
+  $terms = array_unique($terms);
+
+  foreach ($terms as $key => $term) {
+    // strip of prefix and suffix, if necessary
+    if (!empty($form_state['values']['prefix']) && strpos($term, $form_state['values']['prefix']) === 0)
+      $term = drupal_substr($term, drupal_strlen($form_state['values']['prefix']));
+
+    if (!empty($form_state['values']['suffix']) && strpos($term, $form_state['values']['suffix']) == drupal_strlen($term)-drupal_strlen($form_state['values']['suffix']))
+      $term = drupal_substr($term, 0, drupal_strlen($term)-drupal_strlen($form_state['values']['suffix']));
+
+    // create our term array to pass to taxonomy_save_term
+    if (trim($term) != "") {
+      $values[$key]['name'] = trim($term);
+      $values[$key]['description'] = '';
+      $values[$key]['synonyms'] = '';
+      $values[$key]['weight'] = 0;
+      $values[$key]['vid'] = $form_state['values']['vid'];
+      $values[$key]['parent'] = $form_state['values']['parent'];
+      $tid = db_result(db_query("SELECT tid FROM {term_data} WHERE name='%s' AND vid=%d", trim($term), $form_state['values']['vid']));
+      if ($tid) {
+        $values[$key]['tid'] = $tid;
+      }
+      
+    }
+  }
+
+  $count_created = 0;
+  $count_updated = 0;
+  foreach ($values as $value) {
+    switch (taxonomy_save_term($value)) {
+      case SAVED_NEW:
+        $message .= (t('Created new term "%name".', array('%name' => $value['name']))) .'<br />';
+        $count_created++;
+        break;
+      case SAVED_UPDATED:
+        $message .= (t('The term "%term" has been updated.', array('%name' => $value['name']))) .'<br />';
+        $count_updated++;
+        break;
+    }
+  }
+  $count_total = $count_created + $count_updated;
+
+  $message .= t(
+    '%count_total (created: %count_created and updated: %count_updated) into %vocabulary_name.<br />
+    Notice: Currently, terms are never updated, but, if any, duplicates are created.',
+    array(
+      '%count_total' => format_plural($count_total, 'One term has been imported', '@count terms have been imported'),
+      '%count_created' => $count_created,
+      '%count_updated' => $count_updated,
+      '%vocabulary_name' => $form_state['values']['vocabulary_name']
+    )
+  );
+  drupal_set_message($message);
+
+  $form_state['redirect'] = "admin/content/taxonomy/{$form_state['values']['vid']}/terms";
+}
+
+
+function taxonomy_batch_operations_term_count_nodes($tid, $type = 0) {  
+  return db_result(db_query("SELECT count(*) FROM {term_node} AS tn INNER JOIN {term_data} AS t ON t.tid = tn.tid WHERE t.tid = %d", $tid));  
+}
+
+function taxonomy_batch_operations_occurances_term($tid = '') {
+  $term = db_fetch_object(db_query("SELECT tid, vid, name FROM {term_data} WHERE tid=%d", $tid));
+  $vname = db_fetch_object(db_query("SELECT name FROM {vocabulary} WHERE vid=%d", $term->vid));
+  drupal_set_title(t('Associate Items !vocabulary : !name', array('!vocabulary' => $vname->name, '!name' => $term->name)));
+  //$output .= drupal_get_form('taxonomy_batch_operations_occurances_term_filter_form', $tid);
+  $output .= drupal_get_form('taxonomy_batch_operations_occurances_term_form', $term->tid);
+  return $output;
+}
+
+function taxonomy_batch_operations_occurances_term_filter_form($form_state, $tid, $nids) {
+
+  $form['#method'] = 'get';
+  
+  $url=url('admin/content/taxonomy/occurances/term');
+  drupal_add_js("
+  function changeTerm(i) {
+    document.location.href = '".$url."/'+i;
+  }  
+  ","inline");
+  $form['wrapperterm'] = array(
+    '#type' => 'markup',
+    '#prefix' => "<div class='container-inline'>",
+    '#suffix' => "</div>",
+  );  
+    
+  $vid = db_result(db_query("SELECT vid FROM {term_data} WHERE tid=%d",$tid));
+  $vocabulary = db_fetch_object(db_query("SELECT vid, name, filter FROM {vocabulary} WHERE vid=%d", $vid));
+  $name = $vocabulary->name;
+  if ($vocabulary->filter) {
+    $status = '<strong>Enabled</strong>';
+  } else {
+    $status = '<strong>Disabled</strong>';
+  }
+  //if ($vocabulary->filter) {
+    $filter = unserialize($vocabulary->filter);
+    foreach ($filter as $key => $value) {
+      foreach ($value as $key2 => $value2) {
+        if (trim($value2) != '') {
+          $data['field'][$key][] = $value2; 
+        }
+      }
+    }
+    $data['category'] = $tid;
+    $data['term'] = $tid;
+    $data['type'] = 'all';
+    $data['op'] = t('Search');        
+    $form['filter'] = array(
+      '#type' => 'markup',
+      '#title' => t('Default Filter'),
+      //'#value' => l(t('Click here to view default filter'), 'admin/content/taxonomy/occurances/term/'.$tid, array('query' => $data)),
+      '#value' => l(t('System relation !status, click here to edit default relation', array('!status' => $status, '!name' => $name)), 'admin/content/taxonomy/edit/vocabulary/'.$vid, array('html' => TRUE)),
+      '#weight' => 10,
+    );
+  //}
+  
+  $result = db_query("SELECT vid, name, filter FROM {vocabulary} ORDER BY name");
+  while ($item = db_fetch_object($result)) {
+    $tidroot = db_result(db_query("SELECT t.tid FROM {term_data} t INNER JOIN {term_hierarchy} h USING (tid) WHERE h.parent=0 AND t.vid=%d ORDER BY t.name", $item->vid));
+    if ($item->filter) {
+      $options[$tidroot] = t('!name (default filter enabled)',array('!name' => $item->name));
+    } else {
+      $options[$tidroot] = t('!name',array('!name' => $item->name));
+    }
+        
+  }
+  
+  $defaultidroot = db_result(db_query("SELECT t.tid FROM {term_data} t INNER JOIN {term_hierarchy} h USING (tid) WHERE h.parent=0 AND t.vid=%d ORDER BY t.name", $vid)); 
+  
+  $form['wrapperterm']['category'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#default_value' => array($defaultidroot),
+    '#title' => t('Keyphrase Groups'),
+    '#attributes' => array('onchange' => "changeTerm(this.value)"),
+    '#weight' => -1,
+  );
+    
+  $form['wrapperterm']['term'] = _taxonomy_batch_operations_term_select(t('Category'),'category',array($tid),$vid,'',FALSE,FALSE);  
+  $form['wrapperterm']['term']['#attributes'] = array('onchange' => "changeTerm(this.value)");
+  $form['wrapperterm']['term']['#weight'] = 1;
+  
+  $form['wrapper'] = array(
+    '#type' => 'markup',
+    '#prefix' => "<div class='container-inline'>",
+    '#suffix' => "</div>",
+  );
+  
+  /*($form['wrapper']['term'] = array(
+    '#type' => 'select',
+    '#options' => $terms,
+    '#title' => t('Category'),
+    '#attributes' => array('onchange' => "changeTerm(this.value)"),
+    '#default_value' => $default,
+  );*/ 
+  
+  
+  $result = db_query("SELECT type, name FROM {node_type} WHERE (type LIKE ('%%foundation%%') OR type LIKE ('%%roi_link%%') OR type LIKE ('%%roicatalog%%') OR type LIKE ('%%conversion%%') OR type LIKE ('%%dsearch%%')) ORDER BY type, name ASC");
+  $types['existing'] = t('Existing Relation');  
+  $types['all'] = t('Search on All Types');
+  while ($item = db_fetch_object($result)) {
+    $types[$item->type] = $item->name;
+  }        
+  
+  $form['wrapper']['search'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search'),
+    '#size' => 20,
+    '#default_value' => $_GET['search'],
+  );    
+  $form['wrapper']['type'] = array(
+    '#type' => 'select',    
+    '#options' => $types,
+    '#default_value' => $_GET['type'],
+  );
+  $form['wrapper']['button'] = array(
+    '#type' => 'button',
+    '#value' => t('Search'),
+  );
+  $url = url($_GET['q']);
+  
+  $form['wrapper']['reset'] = array(
+    '#type' => 'button',
+    '#value' => t('Reset Search'),
+    '#attributes' => array('onclick' => "window.location.href='".$url."'; return false;"),
+  );
+  $url=url($_GET['q']);
+  drupal_add_js("
+  function changeShowItems(i) {
+    document.location.href = '".$url."?limit='+i;
+  }
+  ","inline");
+  $default=100;
+  if($_GET['limit']) $default=$_GET['limit'];
+  $form['wrapper']['limit'] = array(
+    '#type' => 'select',
+    '#options' => array(25 => 25, 50 => 50, 100 => 100),
+    '#title' => t('Results per page'),
+    '#attributes' => array('onchange' => "changeShowItems(this.value)"),
+    '#default_value' => $default,
+  );  
+
+  $types = array();
+  $result_type = db_query("SELECT DISTINCT type FROM {node} WHERE nid IN (%s)", implode(",", $nids));
+  while ($item_type = db_fetch_object($result_type)) {
+    $types[] = "'".$item_type->type."'";
+  }      
+  
+  $result_field = db_query("SELECT DISTINCT field_name, label, type_name FROM {content_node_field_instance} WHERE type_name IN (".implode(",", $types).") AND field_name NOT IN ('field_roilink','field_roiindex','field_roilinkid') ORDER BY weight ASC");
+  drupal_add_css(drupal_get_path('module','taxonomy_batch_operations') . '/taxonomy_batch_operations.css');  
+  
+  $form['field'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Advanced Search'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#prefix' => "<div class='taxonomy_batch_operations_advanced_search'>",
+      '#suffix' => "</div>",
+      '#tree' => TRUE,      
+    );
+  $foundfield  = FALSE;
+  while ($item_field = db_fetch_object($result_field)) {
+  
+    if (db_table_exists('content_'.$item_field->field_name)) {                
+      $result_field_value = db_query("SELECT ".$item_field->field_name."_value FROM {content_".$item_field->field_name."} WHERE nid IN (%s)", implode(",",$nids));
+      //print "SELECT ".$item_field->field_name."_value FROM {content_".$item_field->field_name."} WHERE nid IN (%s)";
+      $options = array();
+      while ($item_field_value = db_fetch_object($result_field_value)) {      
+        $key = $item_field->field_name . '_value';      
+        $options[$item_field_value->{$key}] = $item_field_value->{$key};  
+      }
+    } else {
+      $result_field_value = db_query("SELECT ".$item_field->field_name."_value FROM {content_type_".$item_field->type_name."} WHERE nid IN (%s)", implode(",",$nids));
+      $options = array();
+      while ($item_field_value = db_fetch_object($result_field_value)) {      
+        $key = $item_field->field_name . '_value';      
+        $options[$item_field_value->{$key}] = $item_field_value->{$key};  
+      }    
+    }
+
+    // if table is not found    
+          
+    
+    
+    if (!empty($options)) {
+      $foundfield = TRUE;    
+      $options[''] = '';
+      asort($options);
+      $form['field'][$item_field->field_name] = array(
+        '#type' => 'select',
+        '#title' => $item_field->label,
+        '#options' => $options,
+        '#multiple' => TRUE,     
+        '#default_value' => $_GET['field'][$item_field->field_name],       
+        '#size' => 4,
+      );
+    }
+  }
+    
+  
+  $result_roilinkid = db_query("SELECT * FROM {content_type_roi_link} WHERE nid IN (%s)", implode(",", $nids));
+  while ($item = db_fetch_object($result_roilinkid)) {
+    $roilinkid[] = $item->field_roilinkid_value;    
+  }
+    
+  
+  $result_roiindexer = db_query("SELECT data FROM {roiindexer} WHERE link_id IN (%s)", implode(",", $roilinkid));
+  while ($item = db_fetch_object($result_roiindexer)) {
+    $data = unserialize($item->data);
+    $attr = $data['attr'];
+    $spec = $data['spec'];
+    foreach ($attr as $key => $value) {        
+      $options_roiindexer[$value][$spec[$key]] = $spec[$key];   
+    }        
+  }
+  
+  foreach ($options_roiindexer as $key => $value) {
+    $foundfield = TRUE;
+    $form['field'][$key] = array(
+        '#type' => 'select',
+        '#title' => $key,
+        '#options' => $options_roiindexer[$key],
+        '#multiple' => TRUE,     
+        '#default_value' => $_GET['field'][$key],       
+        '#size' => 4,
+      );
+  }    
+    
+  if (!$foundfield) {
+    unset($form['field']);
+  } else {
+    /*$form['field']['save'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save Filter as Default System Assignment'),
+      '#prefix' => '<div style="clear: both">',
+      '#suffix' => '</div>',
+    );*/
+  }                
+  
+  return $form;
+}
+
+function taxonomy_batch_operations_occurances_term_form(&$form_state, $tids) {
+  if ($form_state['storage']['page'] == 'copy') {
+    $name = db_result(db_query("SELECT name FROM {term_data} WHERE tid=%d", $tids));
+    drupal_set_title(t('Copy Associate Items from Keyphrase !name', array('!name' => $name)));
+    $form = array();
+    $values = $form_state['values'];
+    $occurances = $values['occurance'];    
+    foreach ($occurances as $key => $value) {
+      if ($value != "0") {        
+        $title = db_result(db_query("SELECT title FROM {node} WHERE nid=%d", $key));
+        $options[$key] = l($title, 'node/'.$key);
+        $default_value[] = $key;
+      }
+    }
+    $form['wrapper'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#title' => t('Occurances'),
+    );
+    $form['wrapper']['occurance'] = array(
+      '#type' => 'checkboxes',      
+      '#options' => $options,
+      '#default_value' => $default_value,
+      '#weight' => -1,
+    );
+    
+    // if not defined then load vocabulary from tid
+    if (!$form_state['storage']['vocabulary']) {
+      $vid = db_result(db_query("SELECT vid FROM {term_data} WHERE tid=%d",$tids));
+    } else {
+      $vid = $form_state['storage']['vocabulary'];
+    }
+    $result = db_query("SELECT vid, name FROM {vocabulary} ORDER BY name");
+    while ($item = db_fetch_object($result)) {
+      $vocabulary[$item->vid] = $item->name;
+    }
+    $form['wrapper2'] = array(
+      '#type' => 'markup',
+      '#prefix' => "<div class='container-inline'>",
+      '#suffix' => "</div>",
+    );
+    $form['wrapper2']['vocabulary'] = array(
+      '#type' => 'select',      
+      '#options' => $vocabulary,
+      '#default_value' => $vid,
+      '#weight' => 1,
+      '#title' => t('Keyphrase Groups'),
+    );
+    $form['wrapper2']['refresh'] = array(
+      '#type' => 'submit',      
+      '#value' => t('Refresh'),
+      '#submit' => array('taxonomy_batch_operations_occurances_term_copy_form_refresh_submit'),
+      '#weight' => 2,     
+    );
+    
+    $form['term'] = _taxonomy_batch_operations_term_select(t('Category'),'category',array(),$vid,'',TRUE,FALSE);
+    $form['term']['#weight'] = 1;
+    $form['replace'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Replace existing relation on above term'),
+      '#weight' => 2,           
+    );
+    $form['tid'] = array(
+      '#type' => 'hidden',
+      '#value' => $tids,
+    );
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Copy'),
+      '#submit' => array('taxonomy_batch_operations_occurances_term_copy_form_submit'),
+      '#weight' => 3,
+    );
+    
+    $form_state['storage']['page'] = 'copy_submit';
+    return $form;
+  }
+  
+  $vid = db_result(db_query("SELECT vid FROM {term_data} WHERE tid=%d",$tids));
+  
+  
+  if($_GET['limit']) {
+    $limit=$_GET['limit'];
+  }else{
+    $limit = 100;
+  }
+  
+  if (empty($_GET['type'])) {
+    $_GET['type'] = 'existing';
+  }  
+  
+  // filter by field value
+  if (!empty($_GET['field'])) {
+    /*if ($_GET['op'] == t('Save Filter as Default System Assignment')) {                        
+      $vname = db_result(db_query("SELECT name FROM {vocabulary} WHERE vid=%d", $vid));
+      drupal_set_message(t('Default Filter System Assignment has been Saved : !name', array('!name' => $vname)));      
+      variable_set('taxonomy_batch_operations_default_filter_'.$vid, $_GET['field']);
+    }*/
+    $join = '';
+    foreach ($_GET['field'] as $key => $value) {
+      foreach ($value as $value2) {      
+        if (db_table_exists('content_'.$key)) {
+          if (trim($value2) != '') {        
+            $join[$key] =  "INNER JOIN {content_{$key}} AS {$key} ON n.nid  = {$key}.nid AND n.vid   = {$key}.vid ";
+            $where[$key][] = "{$key}.{$key}_value = '%s'";
+            $arg[] =  $value2;       
+          }
+        } else if (db_table_exists('content_node_field_instance') && db_result(db_query("SELECT DISTINCT type_name FROM {content_node_field_instance} WHERE field_name='%s'",$key))) {
+          if (trim($value2) != '') {
+            $table = db_result(db_query("SELECT DISTINCT type_name FROM {content_node_field_instance} WHERE field_name='%s'",$key));
+            $join[$key] =  "INNER JOIN {content_type_{$table}} AS {$key} ON n.nid  = {$key}.nid AND n.vid   = {$key}.vid ";
+            $where[$key][] = "{$key}.{$key}_value = '%s'";          
+            $arg[] =  $value2;
+          }
+        } else {
+          // try join with roi link
+          if (trim($value2) != '') {            
+            $join[$key] =  "LEFT JOIN {content_type_roi_link} AS roi_link ON n.nid  = roi_link.nid AND n.vid   = roi_link.vid LEFT JOIN {roiindexer} AS roiindexer ON roiindexer.link_id =  roi_link.field_roilinkid_value";            
+            $where[$key][] = "roiindexer.data LIKE '%%%s%%' AND roiindexer.data LIKE '%%%s%%'";          
+            $arg[] =  $value2;
+            $arg[] =  $key;
+          }
+        }
+      }
+      if ($where[$key]) {
+        $where[$key] = "(" . implode(" OR ", $where[$key]) . ")";
+      }      
+    }
+  }            
+  
+  if ($_GET['type'] != 'existing') {
+    if ($_GET['type'] == 'all') {
+      $where[] = "(n.type LIKE ('%%roicatalog%%') OR n.type LIKE ('%%roi_link%%') OR n.type LIKE ('%%foundation%%') OR n.type LIKE ('%%dsearch%%'))";      
+    } else {
+      $where[] = "n.type='%s'";
+      $arg[] = $_GET['type'];
+    }
+    if (!empty($_GET['search'])) {
+      $search = explode(" ", $_GET['search']);    
+      $keys .= implode(" OR ", $search);
+      if ($_GET['type'] != 'all') {    
+        $keys .= ' type:'.$_GET['type'];
+      }
+      $search_result = taxonomy_batch_operations_modifier_search($keys);       
+      foreach ($search_result as $key => $value) {
+        $nid[] = $value->sid;
+      }      
+      $where[] = "n.nid IN (%s)";
+      $arg[] =  implode(",",$nid);                
+    }
+  } else {
+    $join[] = "INNER JOIN {term_node} tn ON tn.nid=n.nid AND tn.vid=n.vid";
+    $where[] = "tn.tid=%d";
+    $arg[] = $tids;
+    if (!empty($_GET['search'])) {
+      $search = explode(" ", $_GET['search']);    
+      $keys .= implode(" OR ", $search);    
+      $keys .= ' category:'.$tids;
+      $search_result = taxonomy_batch_operations_modifier_search($keys);
+      foreach ($search_result as $key => $value) {
+        $nid[] = $value->sid;
+      }              
+      $where[] = "n.nid IN (%s)";
+      $arg[] =  implode(",", $nid);            
+    }      
+  }
+  
+  //load node       
+  $result_query = pager_query("SELECT n.nid, n.title FROM {node} n  ".implode(" ", $join)." WHERE ".implode(" AND ",$where), $limit, 0, NULL, $arg);    
+              
+  while ($item = db_fetch_object($result_query)) {
+    $result[] = $item;
+  }  
+  
+  //load node       
+  $result_fullquery = db_query("SELECT n.nid, n.title FROM {node} n  ".implode(" ", $join)." WHERE ".implode(" AND ",$where), $arg);
+  while ($item = db_fetch_object($result_fullquery)) {
+    $filternids[] = $item->nid;
+  }
+  
+            
+  foreach ($result as $item) {    
+    // generate snippet
+    /*$node = node_load($item->nid);
+    $node->build_mode = NODE_BUILD_SEARCH_RESULT;
+    $node = node_build_content($node, FALSE, FALSE);
+    $node->body = drupal_render($node->content);*/
+    
+    $default_value[] = db_result(db_query("SELECT n.nid FROM {node} n INNER JOIN {term_node} tn USING (nid, vid) WHERE tn.nid=%d AND tn.tid=%d", $item->nid, $tids));
+    $options[$item->nid] = '';
+    $form['title'][$item->nid] = array('#value' => '');        
+    //$form['type'][$item->nid] = array('#value' => db_result(db_query("SELECT nt.name FROM {node_type} nt INNER JOIN {node} n USING (type) WHERE n.nid=%d", $item->nid)));
+    //$form['score'][$item->nid] = array('#value' => $item->score);
+    $nids[] = $item->nid;
+        
+    if (empty($keys)) {
+      $term = db_result(db_query("SELECT name FROM {term_data} WHERE tid=%d", $tids));
+      $search = explode(" ", $term);    
+      $keys = implode(" OR ", $search);
+    }
+    //$form['snippet'][$item->nid] = array('#value' => search_excerpt($keys, $node->body));
+    /*if (!empty($_GET['search'])) {
+      $default_value[$item->kid] = $item->kid;
+    }*/
+  }
+  $form['occurance'] = array(
+      '#type' => 'checkboxes',      
+      '#options' => $options,
+      '#default_value' => $default_value,
+  );
+  $form['tid'] = array(
+    '#type' => 'hidden',
+    '#value' => $tids,
+  );
+  $form['filter_type'] = array(
+    '#type' => 'hidden',
+    '#value' => $_GET['type'],
+  );
+  
+  $form['#prefix'] = drupal_get_form('taxonomy_batch_operations_occurances_term_filter_form', $tids, $filternids);
+  $form['#suffix'] = theme('pager',NULL, $limit);
+  //$form['#suffix'] .= drupal_get_form('taxonomy_batch_operations_occurances_term_filter_cck_form', $nids);
+  $form['#theme'] = 'taxonomy_batch_operations_occurances_term_form';  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Submit'),      
+    );
+    $form['copy'] = array(
+      '#type' => 'submit',
+      '#value' => t('Copy'),
+      '#submit' => array('taxonomy_batch_operations_occurances_term_copy_form_submit'),       
+    );
+  return $form;
+}
+
+
+function theme_taxonomy_batch_operations_occurances_term_form($form) {
+  $idTable = array();
+  $tblhdr=array();  
+  $row = array();
+  foreach (element_children($form['title']) as $key) {    
+    $nid = $key;
+    $node = node_load($nid);
+    // roi link indexer will be handled later
+    if ($node->type != 'roi_link') continue;    
+    $index_rawdata = roiindexer_index_view_parse_rawdata($node->field_roilinkid[0]['value']);
+    $index_items[$node->nid] = $index_rawdata;
+  }
+  
+  $idTable = array();
+  foreach ($index_items as $key => $value) {           
+    $type = $value['type'];  
+    $category = $value['category'];    
+    $tblhdr=array();  
+    $row = array();
+    //$rows = array();
+    $tblhdr[]=theme('table_select_header_cell');
+    $tblhdr[]=array('data' => 'Title');
+    $strtblhdr = '';  
+          
+    foreach($value['attr'] as $field => $content) {    
+      $tblhdr[]=array('data' => $content);
+      $strtblhdr .= $content;
+    }
+    $tblhdr[]=array('data' => 'Description');
+          
+    if (!$idTable[md5($strtblhdr).$category]) {
+      $idTable[md5($strtblhdr.$category)] = $tblhdr;
+    }        
+    $row = array();
+    $row[] = drupal_render($form['occurance'][$key]);
+    $row[]=l($value['item'],$value['url'], array('absolute' => TRUE));
+    if (!empty($value['attr'])) {
+      $row = array_merge($row, $value['spec']);
+    }    
+    $row[] = $value['desc'];    
+    $printedrows[md5($strtblhdr.$category)][] = $row;             
+    $nameTable[md5($strtblhdr.$category)] = '<h3>'.$category.'</h3>';
+  }        
+  
+  $aNodetype = array();
+  foreach (element_children($form['title']) as $key) {    
+    $nid = $key;
+    $node = node_load($nid);
+    // roi link indexer already handled before
+    if ($node->type == 'roi_link') continue;
+    $aNodetype[$node->type]['type'] = content_types($node->type);        
+    $aNodetype[$node->type]['nodes'][] = $node;
+  }    
+  
+  foreach ($aNodetype as $key => $value) {            
+    $type = $value['type'];  
+    $tblhdr=array();  
+    $row = array();
+    $rows = array();
+    $tblhdr[]=theme('table_select_header_cell');
+    $tblhdr[]=array('data' => 'Title');
+    $strtblhdr = '';
+    $additional=db_result(db_query("SElECT additional FROM {roicatalog} WHERE type='%s'",$type));
+    $ifEmpty=array();
+    foreach($type['fields'] as $field => $content) {
+      $tblhdr[$field]=array('data' => $content['widget']['label']);
+      $strtblhdr .= $content['widget']['label'];
+      $ifEmpty[$field]=TRUE;
+    }
+    foreach($value['nodes'] as $aNode) {      
+      $row = array();
+      $row[] = drupal_render($form['occurance'][$aNode->nid]);
+      $row[]=l($aNode->title,'node/'.$aNode->nid);
+      
+      foreach($type['fields'] as $field => $content) {
+        if($aNode->{$field}[0]['value']!='') $ifEmpty[$field]=FALSE;
+        $row[$field]=$aNode->{$field}[0]['value'];
+      }
+      
+      $rows[] = $row;
+    }
+    
+    //CHECK FOR GLOBAL FIELD DISABLE
+    if($additional){
+      $additional=unserialize($additional);  
+      foreach($additional['show_list'] as $key => $value){
+        if($value==1) $ifEmpty[$key]=TRUE;
+      }
+    }
+    //FILTERING RESULT
+    foreach($ifEmpty as $key => $value){
+      if($value) unset($tblhdr[$key]);
+    }
+    $newrows=array();
+    foreach($rows as $key => $value){
+      $temprow=$value;
+      foreach($temprow as $field => $content){
+        if($ifEmpty[$field]){
+          unset($rows[$key][$field]);
+        }
+      }
+      $newrows[]=$rows[$key];
+    }
+    if (!$idTable[md5($strtblhdr.$key)]) {
+      $idTable[md5($strtblhdr.$key)] = $tblhdr;
+      $printedrows[md5($strtblhdr.$key)] = $newrows;
+      $nameTable[md5($strtblhdr.$key)] = '<h3>'.$type['name'].'</h3>';
+    }
+  }
+  
+  //print_r($idTable);print_R($printedrows);exit();
+  $sOutput='';
+  foreach ($idTable as $key => $header) {    
+    $sOutput .= theme('table',$header,$printedrows[$key],array('class' => 'views-table conversion-roicatalog', 'align' => 'center'), $nameTable[$key]);    
+  }
+  return $sOutput . drupal_render($form);
+}
+/*  
+    
+    $row = array();    
+    
+    $row[] = drupal_render($form['title'][$key]);    
+    $row[] = drupal_render($form['type'][$key]);
+    $row[] = drupal_render($form['score'][$key]);
+    //$row[] = drupal_render($form['snippet'][$key]);
+    //$row[] = drupal_render($form['relation'][$key]);
+    $rows[] = $row;    
+  }
+  $header = array(
+    theme('table_select_header_cell'),
+    t('Title'),
+    t('Type'),
+    t('Score Relevant'),       
+   // t('Snippet'),               
+    //t('Relation'),
+  );
+  if ($rows) {
+    $output .= theme('table', $header, $rows);
+  }  
+  $output .= drupal_render($form);
+  return $output; 
+}*/
+
+function taxonomy_batch_operations_occurances_term_copy_form_refresh_submit($form, &$form_state) {  
+  $form_state['storage']['page'] = 'copy';
+  $form_state['storage']['vocabulary'] = $form_state['values']['vocabulary'];
+  
+}
+
+function taxonomy_batch_operations_batch($op, $tid, $options, &$context) {
+  $term = (array) taxonomy_get_term($tid);
+  // Store some result for post-processing in the finished callback.
+  $context['results'][] = $term['name'];
+  // Optional message displayed under the progressbar.
+  $context['message'] = t('Updating !name', array('!name' => $term['name']));
+  
+  switch ($op) {
+    case 'copyrelation':
+      $source = db_result(db_query("SELECT name FROM {term_data} WHERE tid=%d", $tid));
+      $key = $options['target'];
+      $replace = $options['replace'];      
+      $target = db_result(db_query("SELECT name FROM {term_data} WHERE tid=%d", $key));
+      $occurance = explode(",",$_SESSION['taxonomy_batch_operations_occurances_'. $tid]);
+      if ($replace) {
+        db_query("DELETE FROM {term_node} WHERE tid=%d", $key);
+        $context['message'] = t('!target occurance replaced with !source', array('!source' => $source, '!target' => $target));
+      } else {
+        $context['message'] = t('!source copied to !target', array('!source' => $source, '!target' => $target));
+      }
+        foreach ($occurance as $nid) {          
+            $vid = db_result(db_query("SELECT vid FROM {node} WHERE nid=%d", $nid));
+            db_query("INSERT INTO {term_node} VALUES (%d, %d, %d)", $nid, $vid, $key);          
+        }
+    break;
+  }    
+}
+
+function taxonomy_batch_operations_batch_finished($success, $results, $operations) {
+  if ($success) {
+    cache_clear_all();
+    drupal_set_message(t('Term successfully updated.'));
+  } else {
+    drupal_set_message(t('Term not successfully deleted.'), 'error');
+  }
+}
+
+
+
+function taxonomy_batch_operations_occurances_term_copy_form_submit($form, &$form_state) {
+  if ($form_state['storage']['page'] == 'copy_submit') {
+    
+    $values = $form_state['values'];
+    $tid = $values['tid'];
+    $source = db_result(db_query("SELECT name FROM {term_data} WHERE tid=%d", $tid));
+    foreach ($values['occurance'] as $key => $value) {
+      if ($value != "0") {
+        $occurances[] = $key; 
+      }
+    }
+      
+    $_SESSION['taxonomy_batch_operations_occurances_'. $tid] = implode(",",$occurances);
+    foreach ($values['term'] as $key => $value) {
+      if ($value != "0") { 
+        $operations[] = array('taxonomy_batch_operations_batch', array('copyrelation',$tid, array('target' => $key, 'replace' => $values['replace'])));
+      }                                   
+    }
+    $batch = array(
+      'operations' => $operations,
+      'finished' => 'taxonomy_batch_operations_batch_finished',      
+    );         
+    batch_set($batch);
+    
+    // set form to normal
+    unset($form_state['storage']['page']);         
+  } else {
+    $form_state['storage']['page'] = 'copy';
+  }  
+  
+}
+
+function taxonomy_batch_operations_occurances_term_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  $tid = $values['tid'];
+  foreach ($values['occurance'] as $key => $value) {
+    $vid = db_result(db_query("SELECT vid FROM {node} WHERE nid=%d", $key));
+    
+    if ($value == "0") {            
+      db_query("DELETE FROM {term_node} WHERE nid=%d AND vid=%d AND tid=%d", $key, $vid, $tid);
+    } else {      
+      db_query("INSERT INTO {term_node} VALUES (%d, %d, %d)", $key, $vid, $tid);
+    }
+  }
+  $name = db_result(db_query("SELECT name FROM {term_data} WHERE tid=%d", $tid));
+  drupal_set_message(t('!term occurance updated', array('!term' => $name)));
+}
+
+
+function taxonomy_batch_operations_modifier_search($keys = NULL) {
+          
+      // Build matching conditions
+      list($join1, $where1) = _db_rewrite_sql();
+      $arguments1 = array();
+      $ranking = array();
+      $arguments2 = array();
+      $join2 = '';
+      $conditions1 = 'n.status = 1';
+      
+
+      if ($type = search_query_extract($keys, 'type')) {
+        $types = array();
+        foreach (explode(',', $type) as $t) {
+          $types[] = "n.type = '%s'";
+          $arguments1[] = $t;
+        }
+        $conditions1 .= ' AND ('. implode(' OR ', $types) .')';
+        $keys = search_query_insert($keys, 'type');
+      }
+      
+      if ($category = search_query_extract($keys, 'category')) {
+        $categories = array();
+        foreach (explode(',', $category) as $c) {
+          $categories[] = "tn.tid = %d";
+          $arguments1[] = $c;
+        }
+        $conditions1 .= ' AND ('. implode(' OR ', $categories) .')';
+        $join1 .= ' INNER JOIN {term_node} tn ON n.vid = tn.vid';
+        $keys = search_query_insert($keys, 'category');
+      }
+      
+      $ranking = array();
+      $arguments2 = array();
+      $join2 = '';
+      // Used to avoid joining on node_comment_statistics twice
+      $stats_join = FALSE;
+      $total = 0;
+
+/*      
+      if ($weight = (int)variable_get('node_rank_relevance', 5)) {
+        // Average relevance values hover around 0.15
+        $ranking[] = '%d * i.relevance';
+        $arguments2[] = $weight;
+        $total += $weight;        
+      }                  
+      if ($weight = (int)variable_get('node_rank_recent', 5)) {
+        // Exponential decay with half-life of 6 months, starting at last indexed node
+        $ranking[] = '%d * POW(2, (GREATEST(MAX(n.created), MAX(n.changed), MAX(c.last_comment_timestamp)) - %d) * 6.43e-8)';
+        $arguments2[] = $weight;
+        $arguments2[] = (int)variable_get('node_cron_last', 0);
+        $join2 .= ' LEFT JOIN {node_comment_statistics} c ON c.nid = i.sid';
+        $stats_join = TRUE;
+        $total += $weight;
+        
+      }
+      
+      if (module_exists('comment') && $weight = (int)variable_get('node_rank_comments', 5)) {
+        // Inverse law that maps the highest reply count on the site to 1 and 0 to 0.
+        $scale = variable_get('node_cron_comments_scale', 0.0);
+        $ranking[] = '%d * (2.0 - 2.0 / (1.0 + MAX(c.comment_count) * %f))';
+        $arguments2[] = $weight;
+        $arguments2[] = $scale;
+        if (!$stats_join) {
+          $join2 .= ' LEFT JOIN {node_comment_statistics} c ON c.nid = i.sid';
+        }
+        $total += $weight;
+        
+      }
+      if (module_exists('statistics') && variable_get('statistics_count_content_views', 0) &&
+          $weight = (int)variable_get('node_rank_views', 5)) {
+        // Inverse law that maps the highest view count on the site to 1 and 0 to 0.
+        $scale = variable_get('node_cron_views_scale', 0.0);
+        $ranking[] = '%d * (2.0 - 2.0 / (1.0 + MAX(nc.totalcount) * %f))';
+        $arguments2[] = $weight;
+        $arguments2[] = $scale;
+        $join2 .= ' LEFT JOIN {node_counter} nc ON nc.nid = i.sid';
+        $total += $weight;
+        
+      }*/
+      
+      // When all search factors are disabled (ie they have a weight of zero), 
+      // the default score is based only on keyword relevance and there is no need to 
+      // adjust the score of each item. 
+      if ($total == 0) {
+        $select2 = 'i.relevance AS score';
+        $total = 1;
+      }
+      else {
+        $select2 = implode(' + ', $ranking) . ' AS score';
+      }            
+            
+      // Do search.
+      $find = taxonomy_batch_operations_modifier_dosearch($keys, 'node', 'INNER JOIN {node} n ON n.nid = i.sid '. $join1, $conditions1 . (empty($where1) ? '' : ' AND '. $where1), $arguments1, $select2, $join2, $arguments2);
+
+      // Load results.      
+      return $find;
+}
+
+
+function taxonomy_batch_operations_modifier_dosearch($keywords, $type, $join1 = '', $where1 = '1 = 1', $arguments1 = array(), $columns2 = 'i.relevance AS score', $join2 = '', $arguments2 = array(), $sort_parameters = 'ORDER BY score DESC') {
+  $query = search_parse_query($keywords);  
+
+  if ($query[2] == '') {
+    form_set_error('keys', t('You must include at least one positive keyword with @count characters or more.', array('@count' => variable_get('minimum_word_size', 3))));
+  }
+  if ($query[6]) {
+    if ($query[6] == 'or') {
+      drupal_set_message(t('Search for either of the two terms with uppercase <strong>OR</strong>. For example, <strong>cats OR dogs</strong>.'));
+    }
+  }
+  if ($query === NULL || $query[0] == '' || $query[2] == '') {
+    return array();
+  }
+
+  // Build query for keyword normalization.
+  $conditions = "$where1 AND ($query[2]) AND i.type = '%s'";
+  $arguments1 = array_merge($arguments1, $query[3], array($type));
+  $join = "INNER JOIN {search_total} t ON i.word = t.word $join1";
+  if (!$query[5]) {
+    $conditions .= " AND ($query[0])";
+    $arguments1 = array_merge($arguments1, $query[1]);
+    $join .= " INNER JOIN {search_dataset} d ON i.sid = d.sid AND i.type = d.type";
+  }
+
+  // Calculate maximum keyword relevance, to normalize it.
+  $select = "SELECT SUM(i.score * t.count) AS score FROM {search_index} i $join WHERE $conditions GROUP BY i.type, i.sid HAVING COUNT(*) >= %d ORDER BY score DESC";
+  $arguments = array_merge($arguments1, array($query[4]));
+  $normalize = db_result(db_query_range($select, $arguments, 0, 1));
+  if (!$normalize) {
+    return array();
+  }
+  $columns2 = str_replace('i.relevance', '('. (1.0 / $normalize) .' * SUM(i.score * t.count))', $columns2);
+
+  // Build query to retrieve results.
+  $select = "SELECT i.type, i.sid, $columns2 FROM {search_index} i $join $join2 WHERE $conditions GROUP BY i.type, i.sid HAVING COUNT(*) >= %d";
+  $count_select =  "SELECT COUNT(*) FROM ($select) n1";
+  $arguments = array_merge($arguments2, $arguments1, array($query[4]));
+
+  // Do actual search query
+  $result = db_query("$select $sort_parameters", $arguments);  
+  $results = array();
+  while ($item = db_fetch_object($result)) {
+    $results[] = $item;
+  }
+  return $results;
+}
+
+function _taxonomy_batch_operations_term_select($title, $name, $value, $vocabulary_id, $description, $multiple, $blank, $exclude = array()) {
+  $tree = taxonomy_get_tree($vocabulary_id);
+  $options = array();
+
+  if ($blank) {
+    $options[''] = $blank;
+  }
+  if ($tree) {
+    foreach ($tree as $term) {
+      if (!in_array($term->tid, $exclude)) {
+        $choice = new stdClass();
+        //$count = db_result(db_query("SELECT COUNT(*) FROM {term_node} WHERE tid=%d", $term->tid));
+        //$choice->option = array($term->tid => str_repeat('-', $term->depth) . $term->name . '('.$count.')');
+        $choice->option = array($term->tid => str_repeat('-', $term->depth) . $term->name);
+        $options[] = $choice;
+      }
+    }
+  }
+
+  return array('#type' => 'select',
+    '#title' => $title,
+    '#default_value' => $value,
+    '#options' => $options,
+    '#description' => $description,
+    '#multiple' => $multiple,
+    '#size' => $multiple ? min(9, count($options)) : 0,
+    '#weight' => -15,
+    '#theme' => 'taxonomy_term_select',
+  );
+}
+
+function taxonomy_batch_operations_publish_terms($tids = '') {
+  $tids = explode(",", $tids);    
+  foreach ($tids as $tid) {    
+    db_query("UPDATE {term_data} SET status=1 WHERE tid=%d", $tid);
+  }
+  $redirect = (isset($_GET['destination'])) ? $_GET['destination'] : 'admin/content/taxonomy';
+  drupal_goto($redirect);
+}
+
+function taxonomy_batch_operations_unpublish_terms($tids = '') {
+  $tids = explode(",", $tids);
+  foreach ($tids as $tid) {
+    db_query("UPDATE {term_data} SET status=0 WHERE tid=%d", $tid);
+  }
+  $redirect = (isset($_GET['destination'])) ? $_GET['destination'] : 'admin/content/taxonomy';
+  drupal_goto($redirect);
+}

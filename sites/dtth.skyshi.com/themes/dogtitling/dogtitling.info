@@ -1,0 +1,29 @@
+; $Id: dogtitling.info $
+name = Dog Titling
+description = Dog Titling Themes
+version = VERSION
+core = 6.x
+engine = phptemplate
+
+stylesheets[all][] = fonts/yanonekaffeesatz-light-webfont.css
+stylesheets[all][] = fonts/yanonekaffeesatz-regular-webfont.css
+stylesheets[all][] = css/style.css
+stylesheets[all][] = css/custom.css
+
+scripts[] = js/libs/modernizr-1.7.min.js
+scripts[] = js/libs/jquery.multiple-bgs.min.js
+scripts[] = js/script.js     
+scripts[] = js/jquery.scrollTo.js
+scripts[] = js/jquery.tools.min.js
+;scripts[] = js/jquery.placeholder.js
+
+
+regions[right] = Right sidebar
+regions[content] = Content
+regions[footer] = Footer
+regions[header] = Header
+regions[top] = Top
+regions[footer_col1] = Footer Column 1
+regions[footer_col2] = Footer Column 2
+regions[footer_col3] = Footer Column 3
+regions[closure_js] = Closure (Only for Javascript)

@@ -1,0 +1,1 @@
+<div class="col_content"><?php print $block->content ?></div>

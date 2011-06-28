@@ -1,0 +1,196 @@
+# $Id: ja.po,v 1.1.2.2 2007/05/13 08:09:28 imagine Exp $
+# -----------------------------------------------------------------------------
+# Japanese translation of Drupal (taxonomy_batch_operations.module)
+#
+# Copyright (c) 2006-2007  Drupal Japan  ( http://drupal.jp/ )  /
+#                          Drupal Nippon ( http://drupon.org/ ) /
+#                          Takafumi      ( jp.drupal@imagine **reverse order**)
+#
+# Generated from file:
+#  taxonomy_batch_operations.info,v 1.1 2007/02/13 16:51:01 drawk
+#
+# -----------------------------------------------------------------------------
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2007-05-13 15:37+0900\n"
+"Last-Translator: Takafumi <jp.drupal@imagine **reverse order**>\n"
+"Language-Team: Drupal Japan / Drupal Nippon\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: taxonomy_batch_operations.module:6
+msgid "Enables batch operations for working with taxonomy terms."
+msgstr "分類用語の一括操作が行えるようになります。"
+
+#: taxonomy_batch_operations.module:15
+msgid "Delete term"
+msgstr "分類用語の削除"
+
+#: taxonomy_batch_operations.module:21
+msgid "Delete terms"
+msgstr "分類用語の削除"
+
+# ----------
+#: taxonomy_batch_operations.module:29
+msgid "List terms"
+msgstr "分類用語のリスト"
+
+#: taxonomy_batch_operations.module:37
+msgid "Add multiple terms"
+msgstr "分類用語の一括追加"
+
+# ----------
+#: taxonomy_batch_operations.module:118
+msgid "edit"
+msgstr "編集"
+
+# ----------
+#: taxonomy_batch_operations.module:119
+msgid "delete"
+msgstr "削除"
+
+#: taxonomy_batch_operations.module:131
+msgid "Save"
+msgstr "保存"
+
+#: taxonomy_batch_operations.module:132
+msgid "Delete Selected"
+msgstr "選択したものを削除"
+
+# ----------
+#: taxonomy_batch_operations.module:136
+msgid "No terms available."
+msgstr "利用できる分類用語はありません。"
+
+# ----------
+#: taxonomy_batch_operations.module:160
+msgid "Name"
+msgstr "名前"
+
+# typo Occur[a|re]nces
+#: taxonomy_batch_operations.module:164
+msgid "Occurances"
+msgstr "出現回数"
+
+# ----------
+#: taxonomy_batch_operations.module:168
+msgid "Weight"
+msgstr "優先順位"
+
+# ----------
+#: taxonomy_batch_operations.module:172
+msgid "Operations"
+msgstr "操作"
+
+#: taxonomy_batch_operations.module:217
+msgid "Are you sure you want to delete the selected terms?"
+msgstr "本当に、選択された分類用語を削除してもよろしいですか？"
+
+# ----------
+#: taxonomy_batch_operations.module:219
+msgid "Deleting a term will delete all its children if there are any. This action cannot be undone."
+msgstr "分類用語を削除すると、この分類用語の下位に含まれるすべての分類用語も削除されます。<br />この操作は元に戻すことができませんので、十分に注意して実行してください。"
+
+# ----------
+#: taxonomy_batch_operations.module:220
+msgid "Delete"
+msgstr "削除"
+
+# ----------
+#: taxonomy_batch_operations.module:221
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: taxonomy_batch_operations.module:230
+msgid "Deleted multiple terms"
+msgstr "複数の分類用語が削除されました。"
+
+#: taxonomy_batch_operations.module:254
+msgid "Updated term weights"
+msgstr "分類用語の優先順位が更新されました。"
+
+# ----------
+#: taxonomy_batch_operations.module:289
+msgid "Parent"
+msgstr "上位"
+
+# ----------
+#: taxonomy_batch_operations.module:289
+msgid "Parent term"
+msgstr "上位の分類用語"
+
+# ----------
+#: taxonomy_batch_operations.module:289;293
+msgid "root"
+msgstr "最上位"
+
+# ----------
+#: taxonomy_batch_operations.module:293
+msgid "Parents"
+msgstr "上位"
+
+# ----------
+#: taxonomy_batch_operations.module:293
+msgid "Parent terms"
+msgstr "上位の分類用語"
+
+#: taxonomy_batch_operations.module:299
+msgid "Terms"
+msgstr "分類用語"
+
+#: taxonomy_batch_operations.module:301
+msgid "The names of the terms, one term per line."
+msgstr "分類用語の名称を、1行あたり1つとして入力してください。"
+
+#: taxonomy_batch_operations.module:307
+msgid "Strip text"
+msgstr "テキスト除去"
+
+#: taxonomy_batch_operations.module:308
+msgid "Remove leading or trailing text.  Can be useful if cutting and pasting.  For example, if your terms are in the form \" * item.\", set prefix to \" * \" and suffix to \".\""
+msgstr "テキストの先頭や末尾から、不要な文字列を除去します。 これは、テキストをカットアンドペーストする場合に便利です。 例えば、フォームに \" * item.\" がある場合、プレフィックスに \" * \"、サフィックスに \".\" と入力すれば、前後の無駄な文字列が除去された \"item\" だけを得ることができます。"
+
+#: taxonomy_batch_operations.module:312
+msgid "Prefix"
+msgstr "プレフィックス"
+
+#: taxonomy_batch_operations.module:313
+msgid "Leading text to remove.  Must match exactly."
+msgstr "テキストの先頭から除去したい文字列を入力してください。 文字列は、完全一致する必要があります。"
+
+#: taxonomy_batch_operations.module:317
+msgid "Suffix"
+msgstr "サフィックス"
+
+#: taxonomy_batch_operations.module:318
+msgid "Trailing text to remove.  Must match exactly."
+msgstr "テキストの末尾から除去したい文字列を入力してください。 文字列は、完全一致する必要があります。"
+
+# ----------
+#: taxonomy_batch_operations.module:322
+msgid "Submit"
+msgstr "送信"
+
+#: taxonomy_batch_operations.module:355
+msgid "Created new term %name."
+msgstr "新しい分類用語 %name が作成されました。"
+
+# ----------
+#: taxonomy_batch_operations.module:358
+msgid "The term %term has been updated."
+msgstr "分類用語 %term が更新されました。"
+
+#: taxonomy_batch_operations.module:0 taxonomy_batch_operations.info:0
+msgid "taxonomy_batch_operations"
+msgstr "taxonomy_batch_operations"
+
+#: taxonomy_batch_operations.info:0
+msgid "Taxonomy Batch Operations"
+msgstr "タクソノミー一括操作"
+
+#: taxonomy_batch_operations.info:0
+msgid "Edit multiple taxonomy terms at once."
+msgstr "一度に複数の分類用語を編集できるようにします。"
+

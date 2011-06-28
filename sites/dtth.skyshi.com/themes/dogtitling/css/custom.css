@@ -1,0 +1,396 @@
+.caption_box .caption_add .post_btn {
+  display: inline-block;
+  text-indent: -999px;
+}
+
+.caption_date {
+  color: #807D7D;
+  font-size: 10px;
+}
+
+.recent .post_box {
+  position: relative;  
+}
+
+.recent .post_box .detail a.add_caption {
+  position: absolute;
+  top: 315px;
+  left: 0px;
+}
+
+#user_login a {
+  /*display: block;
+  width: 90px;*/
+  /*text-indent: 0px;*/
+  /*height: auto;*/
+}
+
+#user_login a.fb_button.fb_button_medium {
+    background: url("../images/fb_tw_outh.png") no-repeat scroll left top transparent;
+    margin-top: 18px;
+    position: absolute;
+    left: 120px;
+}
+
+#user_login a:hover.fb_button.fb_button_medium {
+    background: url(../images/fb_tw_outh.png) no-repeat top right;
+}
+
+#user_login a .fb_button_text {
+  visibility: hidden;
+}
+
+.rate-info {
+  margin-right: 40px;
+  float: right;
+}
+
+.caption_action .rate-widget {
+  float: left;
+}
+
+.caption_action .rate-info {
+  clear: none;
+  margin-right: 5px;
+}
+
+.form-item {
+  margin: 0px 0px 0px 0px;
+} 
+
+div.ctools-modal-content .form-item .node-form .form-text {
+  width: auto;
+}
+
+.add_caption_wrapper a {
+  font-weight: bold;
+  margin-left: 25px;
+  padding-left: 20px;
+  background: url(../images/icons.png) scroll 0 -51px  no-repeat;
+}
+
+a.share {
+  background: url("../images/icons.png") no-repeat scroll 0 -119px transparent;  
+  text-indent: -999px;
+  display: block;
+  float: left;
+  height: 17px;
+  margin-left: 5px;  
+  width: 17px;
+}
+
+a.add_caption.open span {
+    background: url("../images/icons.png") no-repeat scroll -4px -17px transparent;
+    padding: 0 6px;
+}
+
+#breadcrumb a {
+    background: url("../images/breadcrumb.png") no-repeat scroll 0 -135px transparent;
+}
+
+#breadcrumb a:first-child {
+    background: url("../images/breadcrumb.png") no-repeat scroll 0 0 transparent;
+    padding-left: 10px;
+}
+
+#user_status {
+    background: url("../images/login_with2.png") no-repeat scroll left top transparent;
+    float: right;
+    height: 80px;
+    margin-right: 10px;
+    width: 275px;
+}
+
+#user_status .user_status_inner {
+  margin: 15px 0px 0px 20px;
+  font-family: 'YanoneKaffeesatzLight';
+  font-size: 18px;
+  font-weight: normal;
+}
+
+#user_status .user_status_inner .userpicture {
+  float: left;
+  margin: 0px 5px 0px 0px;
+}
+
+.info_time, .info_share {
+  float: left;
+  margin-left: 2px;
+}
+
+.info_share {
+  float: right;
+  width: 190px;  
+}
+
+/*.recent .info_time {
+  float: right;
+}*/
+
+.recent .pic_actions .flag-wrapper {
+/*  float: right;*/
+}
+
+/*.recent .info_share {
+  width: 130px;  
+}
+
+.recent .info_share div.fb {
+  float: right;
+}
+
+.recent .info_share div.tw {
+  float: right;  
+}*/
+
+#sidebar {
+  margin-top: -24px;
+}
+
+h3.breed_lists_box_title {
+  font-weight: normal;
+}
+
+.tooltip {
+    background: url("../images/balloon.png") repeat scroll 0 0 transparent;
+    color: #444444;
+    display: none;
+    line-height: 14px;
+    font-size: 11px;
+    height: 45px;
+    padding: 10px 0 0 0px;
+    width: 170px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.frequent .breed_box_thumbs img {
+  height: 80px;
+  width: 80px;
+}
+
+.frequent .breed_box_thumbs a {
+  height: 82px;
+  width: 82px;
+  margin: 0 13px 16px 0;
+}
+
+.breed_box .breed_box_title {
+    float: left;
+    margin: 0 10px 0 6px;        
+}
+
+.breed_box .breed_box_action a {
+    display: block;
+    float: left;
+    height: 17px;
+    width: 17px;
+    text-indent: -999px;
+}
+
+.breed_box .breed_box_action a.fb {
+    background: url(../images/icons.png) scroll 0 -119px  no-repeat;
+    margin-right: 5px;
+}
+.breed_box .breed_box_action a.tw {
+    background: url(../images/icons.png) scroll 0 -102px  no-repeat;
+}
+
+.pic_actions a.fb {
+    background: url(../images/icons.png) scroll 0 -119px  no-repeat;
+    margin-left: 5px;
+    height: 17px;
+    width: 17px;
+    text-indent: -999px;
+    display: inline-block;
+}
+
+/* float is not required on recent page */
+.post_box_content .small .img_wrapper img {
+  display: block;
+  float: none;
+  margin: 0px auto;
+}
+
+/* override flag button */
+.pic_actions .flag-wrapper {
+  display: block;
+  float: right;
+}
+
+.pic_actions {
+/*  overflow: hidden;*/
+} 
+
+/* breed detail page*/
+div.fb {
+  float: left;
+  width: 90px;
+}
+
+div.tw {
+  float: left;
+  width: 90px;  
+}
+
+.pre_post_box {
+  margin: 0 20px 10px 0;
+}
+
+.pre_post_box_action {
+  float: right;
+}
+
+.pre_post_box_entry.has_action {  
+  margin-right: 0px;
+  width: 410px;
+}
+/* end of breed detail page*/
+
+/* frequent page */
+.breed_box_action {
+  float: right;
+  width: 190px;
+}
+
+.breed_box .breed_box_title {
+  width: 390px;
+  margin: 0px;
+}
+
+.breed_boxes .breed_box .breed_box_title {
+  width: 100%;
+}
+/* end of frequent page */
+
+/* dog page */
+/*.pre_post_box .pre_post_box_entry {
+  margin: 0px;
+  width: 415px;
+}*/
+/* end of dog page */
+
+/* thank you message appear on top of image */
+.img_wrapper a {
+  display: block;
+}
+/* end of thank you*/
+
+/* uploader */
+#edit-breed-wrapper #edit-breed.form-autocomplete {  
+  background-position: 100% 8px;
+}
+
+#edit-breed-wrapper #edit-breed.throbbing {
+  background-position: 100% -12px;
+}
+
+/*.jcrop-holder {
+  background-color: #fff !important;
+  opacity: 0.6;
+  filter:alpha(opacity=60);
+}*/
+
+/* end of uploader */
+
+#upload_container.newbreed .upload_form_btns {
+  clear: both;
+  margin-left: 0px;
+} 
+
+#upload_container.login {
+  text-align: center;
+}
+
+#upload_container.login #user_login {
+  float: none;
+  margin: 0px auto;
+}
+
+tr.even, tr.odd {
+  background-color: transparent;
+  border-bottom: 0px none;
+  padding: 0px 0px 0px 0px;
+}
+
+a.more-button.ctools-ajaxing {
+  padding-right: 0px !important;
+}
+
+.picture img {
+  width: 50px;
+}
+
+/* ADMIN */
+.admin #content {
+  float: none;
+  width: auto;
+  padding: 10px 10px 10px 10px;
+}
+.admin #content table {
+  width: 100%;
+}
+
+.admin #top_tab {
+  margin: 23px 11px 19px 11px;
+}
+
+.admin .tabs {
+    background: url(../images/tab_bottom.png) repeat-x left bottom;    
+}
+
+/* pager */
+ul.pager {
+  margin: 10px 0px 0px 0px;
+  overflow: hidden;
+}
+
+ul.pager li {
+  float: left;  
+  list-style: none;
+}
+
+/* end of pager */
+
+ul.pager li a, ul.pager li.pager-current {
+  display: block;
+  border: 1px solid #DF7D23;
+  color: #DF7D23;
+  padding: 5px;
+  margin: 0px 5px;
+}
+/* wns od pFWE */
+
+/* messages */
+.messages {
+  background-color: #fff;
+  border: 1px solid #b8d3e5;
+  padding: 10px !important;
+}
+
+.messages .messages {
+  padding: 0px !important;
+}
+
+.preview {
+  background-color: #fcfce8;
+  border: 1px solid #e5e58f;
+}
+
+div.status {
+  color: #33a333;
+  border-color: #c7f2c8;
+}
+
+div.error, tr.error {
+  color: #a30000;
+  background-color: #FFCCCC;  
+}
+
+/* end of messages */
+
+/* counter */
+.text_counter {
+  float: left;
+  font-size: 11px;  
+}

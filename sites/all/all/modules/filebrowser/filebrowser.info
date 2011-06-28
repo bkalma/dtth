@@ -1,0 +1,4 @@
+; $Id: filebrowser.info,v 1.0 Exp $
+name = Jquery File Browser
+description = Jquery File Browser
+core = 6.x

@@ -1,0 +1,16 @@
+; $Id: twitter_avatar.info,v 1.1.2.1 2010/04/15 02:57:55 walkah Exp $
+name = Twitter Avatar 
+description = Adds support for "Display Avatar form twitter.com"
+php = 5.1
+core = 6.x
+dependencies[] = twitter
+dependencies[] = oauth
+dependencies[] = twitter_signin
+
+
+; Information added by drupal.org packaging script on 2010-02-19
+version = "6.x-1.0-beta1"
+core = "6.x"
+project = "twitter_avatar"
+datestamp = "1266603307"
+

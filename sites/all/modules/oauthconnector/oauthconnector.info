@@ -1,0 +1,15 @@
+name = OAuth Connector
+description = OAuth support for the Connector module
+core = 6.x
+package = "Connector"
+dependencies[] = connector
+dependencies[] = oauth_common
+dependencies[] = http_client_oauth
+dependencies[] = ctools
+
+; Information added by drupal.org packaging script on 2011-04-07
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "oauthconnector"
+datestamp = "1302135540"
+

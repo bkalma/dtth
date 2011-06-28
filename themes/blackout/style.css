@@ -1,0 +1,388 @@
+body
+{
+  background: url(images/header-bg.jpg) top left repeat-x;
+  color: #4A5157;
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  margin: 0;
+}
+
+a
+{
+  color: #93B300;
+}
+
+a:hover
+{
+  text-decoration: none;
+}
+
+h1
+{
+  color: #292929;
+  font-size: 30px;
+  letter-spacing: -1px;
+}
+
+h2
+{
+  color: #292929;
+  font-size: 24px;
+}
+
+h3
+{
+  color: #292929;
+  font-size: 13px;
+}
+
+p,ul,ol
+{
+  line-height: 170%;
+  margin-bottom: 1.5em;
+}
+
+#container,div#postcontent
+{
+  margin: 0 auto;
+  width: 918px;
+}
+
+#header
+{
+  height: 147px;
+  margin: 0 auto;
+  width: 919px;
+}
+
+#header h1
+{
+  font-size: 38px;
+  font-weight: 400;
+  letter-spacing: -2px;
+  margin: 0;
+  padding: 78px 0 0 78px;
+  text-transform: lowercase;
+}
+
+#header h2
+{
+  color: #FFF;
+  font-size: 16px;
+  font-weight: 400;
+  margin-top: -5px;
+  padding: 0 0 0 90px;
+  text-transform: lowercase;
+}
+
+#header a
+{
+  color: #FFF;
+  text-decoration: none;
+}
+
+#menu
+{
+  background: #303334;
+  height: 50px;
+}
+
+#menu .indent
+{
+  margin: 0 auto;
+  width: 919px;
+}
+
+#menu ul
+{
+  line-height: normal;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0 0;
+}
+
+#menu li
+{
+  display: inline;
+}
+
+#menu a
+{
+  color: #FFF;
+  display: block;
+  float: left;
+  font-size: 14px;
+  font-weight: 700;
+  height: 25px;
+  margin: 0 10px;
+  padding: 5px 20px 0;
+  text-decoration: none;
+  text-transform: lowercase;
+}
+
+#menu a:hover
+{
+  text-decoration: underline;
+}
+
+#menu .active a
+{
+  background: #FF8900;
+}
+
+#container
+{
+  clear: both;
+}
+
+.content-padding
+{
+  padding: 10px;
+}
+
+#sidebar-left
+{
+  float: left;
+  margin-right: 1%;
+  width: 21%;
+}
+
+#main
+{
+  float: left;
+  width: 99%;
+}
+
+.sidebars-1 #main
+{
+  float: left;
+  width: 77%;
+}
+
+.sidebars-2 #main
+{
+  float: left;
+  width: 56%;
+}
+
+#sidebar-right
+{
+  float: right;
+  width: 21%;
+}
+
+h1.title
+{
+  background: url(images/asterisk_orange.png) no-repeat left center;
+  margin: 45px 0 20px;
+  padding-left: 33px;
+}
+
+div.block h2.title,div.node h2.title a
+{
+  background: url(images/asterisk_orange.png) no-repeat left center;
+  margin: 40px 0 25px;
+  padding-left: 33px;
+}
+
+.block .content
+{
+  background: url(images/bgblock.gif) repeat-x;
+  padding: 26px;
+}
+
+div.node
+{
+  margin: 30px 0;
+}
+
+#user-login-form
+{
+  text-align: left;
+}
+
+#user-login-form .form-item input
+{
+  width: 95%;
+}
+
+#user-login-form input.form-submit
+{
+  margin-bottom: 10px;
+}
+
+#footer
+{
+  background: url(images/img08.gif) no-repeat center top;
+  font-size: 12px;
+  padding: 35px 0;
+}
+
+#footer p
+{
+  text-align: center;
+}
+
+h3.commentTitle
+{
+  font-size: 1.35em;
+  margin: 0;
+  padding: 0;
+}
+
+.commentTitle a
+{
+  margin: 0;
+  padding: 0;
+}
+
+div.comment
+{
+  background-color: #FFF;
+  border: 1px solid #CCC;
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.metadata
+{
+  clear: both;
+  color: #AAA;
+  font-size: smaller;
+  line-height: 16px;
+  margin: 2px 0 0;
+  padding: 5px 0 0;
+}
+
+.chronodata
+{
+  background: url(images/calendar.png) left center no-repeat;
+  padding: 2px 0 2px 20px;
+}
+
+.new
+{
+  color: red;
+  float: right;
+}
+
+div.links ul.links a
+{
+  background-repeat: no-repeat;
+  padding-left: 18px;
+}
+
+div.links ul.links li.node_read_more a
+{
+  background-image: url(images/doc-option-tab.png);
+}
+
+div.links ul.links li.comment_edit a
+{
+  background-image: url(images/mini-edit.png);
+}
+
+div.links ul.links li.comment_delete a
+{
+  background-image: url(images/mini-trash.png);
+}
+
+div.links ul.links li.blog_usernames_blog a
+{
+  background-image: url(images/user-plain-blue.png);
+}
+
+div.links ul.links li.comment_forbidden a
+{
+  padding-left: 0;
+}
+
+div.links ul.links li.upload_attachments a
+{
+  background-image: url(images/photo.png);
+}
+
+.terms
+{
+  background-image: url(images/folder-open-green.png);
+  background-repeat: no-repeat;
+  padding-left: 18px;
+}
+
+#menu ul.links li
+{
+  padding: 0;
+}
+
+td,th
+{
+  padding: .3em .5em .5em;
+}
+
+table tr.odd
+{
+  background-color: #f3f3f3;
+}
+
+table tr.even
+{
+  background-color: #FFF;
+}
+
+.item-list ul.pager
+{
+  margin: 0;
+  padding-top: 10px;
+}
+
+.item-list .pager li
+{
+  margin: 0;
+  padding: 3px;
+}
+
+.item-list .pager li.pager-current
+{
+  background-color: #bbb;
+  border: 1px solid #000;
+  color: #fff;
+  padding: 4px;
+}
+
+.messages
+{
+  background-color: #fff;
+  border: 1px solid #b8d3e5;
+}
+
+.messages,.preview
+{
+  margin: .75em 0;
+  padding: .5em 1em;
+}
+
+div.status
+{
+  border-color: #c7f2c8;
+  color: #33a333;
+}
+
+dl dd
+{
+  margin: 0 0 .5em 1.5em;
+}
+
+div#postcontent .block .content
+{
+  background: none;
+}
+
+div.block,table#attachments
+{
+  margin-bottom: 1.5em;
+}
+
+div.links ul.links li.comment_comments a,div.links ul.links li.comment_add a,div.links ul.links li.comment_reply a
+{
+  background-image: url(images/mini-comment.png);
+}

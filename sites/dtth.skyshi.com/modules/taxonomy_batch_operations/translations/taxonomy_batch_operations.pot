@@ -1,0 +1,241 @@
+# $Id$
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  taxonomy_batch_operations.module,v 6.x.1 2009/03/12 23:04:08 tbarregren
+#  taxonomy_batch_operations.info,v 6.x.1 2009/09/12 16:51:01 drawk
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-03-12 01:35+0100\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: taxonomy_batch_operations.module:42
+msgid "Use this form in order to do some works with multiple terms."
+msgstr ""
+
+#: taxonomy_batch_operations.module:46
+msgid "Use this form in order to create a set of terms."
+msgstr ""
+
+#: taxonomy_batch_operations.module:50
+msgid "Use <em>Taxonomy batch operations</em> to import, edit or remove a taxonomy or a list of terms.<br /><br />\n      You can access module when you edit a vocabulary or add terms at <a href=\"!vocabulary_link\">Administer > Content > Taxonomy</a> or directly with urls:<br />\n      admin/content/taxonomy/delete/term/tid<br />\n      admin/content/taxonomy/delete/terms/tid_1,tid_2,...,tid_n<br />\n      admin/content/taxonomy/<em>vocabulary_id</em>/terms<br />\n      admin/content/taxonomy/<em>vocabulary_id</em>/add/terms.<br /><br />\n      Notice: Currently, when adding multiple terms, they are never updated, but, if any, duplicates are created."
+msgstr ""
+
+#: taxonomy_batch_operations.module:132;252
+msgid "Name"
+msgstr ""
+
+#: taxonomy_batch_operations.module:144;257
+msgid "Occurances"
+msgstr ""
+
+#: taxonomy_batch_operations.module:156;262
+msgid "Weight"
+msgstr ""
+
+#: taxonomy_batch_operations.module:186
+msgid "edit"
+msgstr ""
+
+#: taxonomy_batch_operations.module:187
+msgid "delete"
+msgstr ""
+
+#: taxonomy_batch_operations.module:199
+msgid "Save weights"
+msgstr ""
+
+#: taxonomy_batch_operations.module:203
+msgid "Delete selected terms"
+msgstr ""
+
+#: taxonomy_batch_operations.module:210
+msgid "No terms available."
+msgstr ""
+
+#: taxonomy_batch_operations.module:266
+msgid "Operations"
+msgstr ""
+
+#: taxonomy_batch_operations.module:267
+msgid ""
+msgstr ""
+
+#: taxonomy_batch_operations.module:318
+msgid "Are you sure you want to delete the %count_deleted?"
+msgstr ""
+
+#: taxonomy_batch_operations.module:320
+msgid "Deleting a term will delete all its children if there are any. This action <strong>cannot</strong> be undone"
+msgstr ""
+
+#: taxonomy_batch_operations.module:321
+msgid "%selected \"%list_deleted_terms\" (possible children are not shown)."
+msgstr ""
+
+#: taxonomy_batch_operations.module:326
+msgid "Delete"
+msgstr ""
+
+#: taxonomy_batch_operations.module:327
+msgid "Cancel"
+msgstr ""
+
+#: taxonomy_batch_operations.module:350
+msgid "No term was deleted."
+msgstr ""
+
+#: taxonomy_batch_operations.module:354
+msgid "%count_total.<br />\n        %count_non_existing.<br />"
+msgstr ""
+
+#: taxonomy_batch_operations.module:364
+msgid "%count_deleted:<br />\n        \"%list_deleted_terms\".<br />"
+msgstr ""
+
+#: taxonomy_batch_operations.module:404
+msgid "Updated term weights."
+msgstr ""
+
+#: taxonomy_batch_operations.module:443
+msgid "Parent"
+msgstr ""
+
+#: taxonomy_batch_operations.module:443
+msgid "Parent term"
+msgstr ""
+
+#: taxonomy_batch_operations.module:443;447
+msgid "root"
+msgstr ""
+
+#: taxonomy_batch_operations.module:447
+msgid "Parents"
+msgstr ""
+
+#: taxonomy_batch_operations.module:447
+msgid "Parent terms"
+msgstr ""
+
+#: taxonomy_batch_operations.module:454
+msgid "Terms"
+msgstr ""
+
+#: taxonomy_batch_operations.module:456
+msgid "The names of the terms, one term per line."
+msgstr ""
+
+#: taxonomy_batch_operations.module:464
+msgid "Strip text"
+msgstr ""
+
+#: taxonomy_batch_operations.module:465
+msgid "Remove leading or trailing text. Can be useful if cutting and pasting.  For example, if your terms are in the form \" * item.\", set prefix to \" * \" and suffix to \".\""
+msgstr ""
+
+#: taxonomy_batch_operations.module:469
+msgid "Prefix"
+msgstr ""
+
+#: taxonomy_batch_operations.module:470
+msgid "Leading text to remove. Must match exactly."
+msgstr ""
+
+#: taxonomy_batch_operations.module:474
+msgid "Suffix"
+msgstr ""
+
+#: taxonomy_batch_operations.module:475
+msgid "Trailing text to remove. Must match exactly."
+msgstr ""
+
+#: taxonomy_batch_operations.module:489;97
+msgid "Add multiple terms"
+msgstr ""
+
+#: taxonomy_batch_operations.module:523
+msgid "Created new term \"%name\"."
+msgstr ""
+
+#: taxonomy_batch_operations.module:527
+msgid "The term \"%term\" has been updated."
+msgstr ""
+
+#: taxonomy_batch_operations.module:534
+msgid "%count_total (created: %count_created and updated: %count_updated) into %vocabulary_name.<br />\n    Notice: Currently, terms are never updated, but, if any, duplicates are created."
+msgstr ""
+
+#: taxonomy_batch_operations.module:318
+msgid "selected term"
+msgid_plural "@count selected terms"
+msgstr[0] ""
+msgstr[1] ""
+
+#: taxonomy_batch_operations.module:323
+msgid "The selected term is"
+msgid_plural "@count terms are selected:"
+msgstr[0] ""
+msgstr[1] ""
+
+#: taxonomy_batch_operations.module:358
+msgid "One submitted term"
+msgid_plural "@count submitted terms."
+msgstr[0] ""
+msgstr[1] ""
+
+#: taxonomy_batch_operations.module:359
+msgid "One non existing term"
+msgid_plural "@count non existing terms"
+msgstr[0] ""
+msgstr[1] ""
+
+#: taxonomy_batch_operations.module:368
+msgid "One deleted term"
+msgid_plural "@count deleted terms"
+msgstr[0] ""
+msgstr[1] ""
+
+#: taxonomy_batch_operations.module:538
+msgid "One term has been imported"
+msgid_plural "@count terms have been imported"
+msgstr[0] ""
+msgstr[1] ""
+
+#: taxonomy_batch_operations.module:73
+msgid "Delete term"
+msgstr ""
+
+#: taxonomy_batch_operations.module:79
+msgid "Delete terms"
+msgstr ""
+
+#: taxonomy_batch_operations.module:87
+msgid "Edit multiple terms"
+msgstr ""
+
+#: taxonomy_batch_operations.module:0
+msgid "taxonomy_batch_operations"
+msgstr ""
+
+#: taxonomy_batch_operations.info:0
+msgid "Taxonomy Batch Operations"
+msgstr ""
+
+#: taxonomy_batch_operations.info:0
+msgid "Import, edit and remove multiple taxonomy terms at once."
+msgstr ""
+
+#: taxonomy_batch_operations.info:0
+msgid "Taxonomy"
+msgstr ""
+

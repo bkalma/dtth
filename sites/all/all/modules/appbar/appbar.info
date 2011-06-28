@@ -1,0 +1,10 @@
+; $Id$
+name = Application Bar
+description = "Adds an appbar to the bottom of the page for site users, like Facebook."
+core = 6.x
+; Information added by drupal.org packaging script on 2009-08-23
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "appbar"
+datestamp = "1251029003"
+

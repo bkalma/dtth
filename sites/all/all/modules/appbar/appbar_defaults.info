@@ -1,0 +1,11 @@
+; $Id$
+name = Appbar Default Notifications
+description = "Provides notifications to the Appbar about events from Drupal core."
+core = 6.x
+dependencies[] = appbar
+; Information added by drupal.org packaging script on 2009-08-23
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "appbar"
+datestamp = "1251029003"
+
